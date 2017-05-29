@@ -1,0 +1,29 @@
+{
+  "name": "jmacs",
+  "version": "0.0.1",
+  "description": "Javascript Macros",
+  "author": "Blake Regalia <blake.regalia@gmail.com> (http://blake-regalia.com)",
+  "license": "ISC",
+  "repository": "blake-regalia/jmacs.js",
+  "files": [
+    "dist"
+  ],
+  "main": "dist/main/jmacs.js",
+  "keywords": [
+    "macro"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "ebnf-parser": "^0.1.10",
+    "glob": "^7.1.1",
+    "gulp": "^3.9.1",
+    "gulp-cached": "^1.1.1",
+    "gulp-plumber": "^1.1.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-soda": "^0.5.2",
+    "gulp-util": "^3.0.8",
+    "jison": "^0.4.17",
+    "lex-parser": "^0.1.4",
+    "through2": "^2.0.3"
+  }
+}
