@@ -52,6 +52,7 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 <eval,line>"&"			return '&'
 <eval,line>"|"			return '|'
 
+<eval,line>"==="		return '==='
 <eval,line>"=="			return '=='
 <eval,line>"!="			return '!='
 

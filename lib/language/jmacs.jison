@@ -11,10 +11,13 @@
 %right TERNARY
 %left '||'
 %left '&&'
-%left '==' '!='
+%left '===' ==' '!='
 %left '<' '>' '<=' '>='
 %left '+' '-'
+%left '>>>' '>>' '<<'
 %left '*' '/' '%'
+%left '|'
+%left '&'
 
 %start grammar
 
@@ -139,6 +142,7 @@ relational_expression
 
 equality_expression
 	: relational_expression
+	| equality_expression '===' relational_expression -> BinaryExpr($1, $2, $3)
 	| equality_expression '==' relational_expression -> BinaryExpr($1, $2, $3)
 	| equality_expression '!=' relational_expression -> BinaryExpr($1, $2, $3)
 	;
@@ -163,7 +167,7 @@ expression
 	;
 
 operator
-	: '+' | '-' | '*' | '/' | '<' | '>' | '<=' | '>=' | '==' | '!=' | '&&' | '||' | '>>>' | '>>' | '<<' | '&' | '|'
+	: '+' | '-' | '*' | '/' | '<' | '>' | '<=' | '>=' | '===' | '==' | '!=' | '&&' | '||' | '>>>' | '>>' | '<<' | '&' | '|'
 	;
 
 value

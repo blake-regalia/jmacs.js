@@ -101,20 +101,6 @@ describe('functions', () => {
 	});
 });
 
-describe('builtins', () => {
-
-	it('floor', () => {
-		eq('2', compile('@{floor(10 / 4)}'));
-	});
-
-	it('ceil', () => {
-		eq('3', compile('@{ceil(10 / 4)}'));
-	});
-
-	it('pi', () => {
-		eq((Math.PI*2)+'', compile('@{PI * 2}'));
-	});
-});
 
 describe('logic', () => {
 	function call(s_method, ...a_args) {
@@ -147,6 +133,51 @@ describe('logic', () => {
 
 	it('else', () => {
 		eq('nothing', call('word', '0'));
+	});
+
+	it('truthy', () => {
+		eq('yes', compile(`@{'truthy'? 'yes': 'no'}`));
+	});
+
+	it('truthy negative', () => {
+		eq('no', compile(`@{!'truthy'? 'yes': 'no'}`));
+	});
+});
+
+describe('Math', () => {
+	it('pi', () => {
+		eq((Math.PI*2)+'', compile('@{PI * 2}'));
+	});
+
+	it('floor', () => {
+		eq('2', compile('@{floor(10 / 4)}'));
+	});
+
+	it('ceil', () => {
+		eq('3', compile('@{ceil(10 / 4)}'));
+	});
+});
+
+describe('String', () => {
+	function call(s_method, ...a_args) {
+		let s_script = `
+			@set word 'hello'
+			@{${s_method}(word${a_args.map(s => ','+s).join('')})}
+		`;
+	
+		return compile(s_script);
+	}
+
+	it('length', () => {
+		eq('5', call('length'));
+	});
+
+	it('charAt', () => {
+		eq('h', call('charAt', 0));
+	});
+
+	it('replace', () => {
+		eq('hey', call('replace', `'llo'`, `'y'`));
 	});
 });
 
