@@ -6,7 +6,7 @@
 numeric			((\d+(\.\d*)?)|(\.\d+))
 alphanum_u		[A-Za-z_0-9]
 word 			{alphanum_u}+
-name 			[A-Za-z]{alphanum_u}*
+name 			[A-Za-z_]{alphanum_u}*
 
 regex 			[~][/](?:[^/\n\\]|\\.)+[/][a-z]*
 
