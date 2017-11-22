@@ -74,15 +74,19 @@ repeat
 	;
 
 macro
-	: '@macro' NAME parameters macro_body '@end' -> Macro($NAME, $parameters, $macro_body)
+	: '@def' NAME parameters macro_body '@end' -> Macro($NAME, $parameters, $macro_body)
 	;
 
 parameters
-	: '(' (NAME ',')* NAME? ')' -> push($2, $3)
+	: '(' (parameter ',')* parameter? ')' -> push($2, $3)
 	;
 
 parameter
-	: NAME -> Parameter($NAME)
+	: NAME defaults? -> Parameter($NAME, $2)
+	;
+
+defaults
+	: '=' terminal_value -> $2
 	;
 
 macro_body
@@ -95,11 +99,28 @@ unary_expression
 	| '-' unary_expression -> UnaryExpr($1, $2)
 	;
 
-multiplicative_expression
+bitshift_expression
 	: unary_expression
-	| multiplicative_expression '*' unary_expression -> BinaryExpr($1, $2, $3)
-	| multiplicative_expression '/' unary_expression -> BinaryExpr($1, $2, $3)
-	| multiplicative_expression '%' unary_expression -> BinaryExpr($1, $2, $3)
+	| bitshift_expression '>>>' unary_expression -> BinaryExpr($1, $2, $3)
+	| bitshift_expression '>>' unary_expression -> BinaryExpr($1, $2, $3)
+	| bitshift_expression '<<' unary_expression -> BinaryExpr($1, $2, $3)
+	;
+
+bitwise_and_expression
+	: bitshift_expression
+	| bitwise_and_expression '&' bitshift_expression -> BinaryExpr($1, $2, $3)
+	;
+
+bitwise_or_expression
+	: bitwise_and_expression
+	| bitwise_or_expression '|' bitwise_and_expression -> BinaryExpr($1, $2, $3)
+	;
+
+multiplicative_expression
+	: bitwise_or_expression
+	| multiplicative_expression '*' bitwise_or_expression -> BinaryExpr($1, $2, $3)
+	| multiplicative_expression '/' bitwise_or_expression -> BinaryExpr($1, $2, $3)
+	| multiplicative_expression '%' bitwise_or_expression -> BinaryExpr($1, $2, $3)
 	;
 
 additive_expression
@@ -142,7 +163,7 @@ expression
 	;
 
 operator
-	: '+' | '-' | '*' | '/' | '<' | '>' | '<=' | '>=' | '==' | '!=' | '&&' | '||'
+	: '+' | '-' | '*' | '/' | '<' | '>' | '<=' | '>=' | '==' | '!=' | '&&' | '||' | '>>>' | '>>' | '<<' | '&' | '|'
 	;
 
 value

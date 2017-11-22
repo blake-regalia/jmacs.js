@@ -26,7 +26,10 @@ soda(gulp, {
 		// direct javascript
 		js: [
 			'copy',
-			'develop:copy',
+			'develop: copy',
+			// 'istanbul',
+			// 'mocha: istanbul',
+			'mocha',
 		],
 
 		// compiling language compiler from jison
@@ -51,5 +54,14 @@ soda(gulp, {
 		copy: {
 			glob: '*.js',
 		},
+		'*': {
+			test_src: [
+				'test/main/jmacs.js',
+			],
+		},
+	},
+
+	aliases: {
+		test: ['mocha'],
 	},
 });

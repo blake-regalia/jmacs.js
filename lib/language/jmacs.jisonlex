@@ -37,6 +37,9 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 <eval,line>"/"			return '/'
 <eval,line>"%"			return '%'
 
+<eval,line>">>>"		return '>>>'
+<eval,line>">>"			return '>>'
+<eval,line>"<<"			return '<<'
 
 <eval,line>"<"			return '<'
 <eval,line>">"			return '>'
@@ -45,6 +48,9 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 
 <eval,line>"&&"			return '&&'
 <eval,line>"||"			return '||'
+
+<eval,line>"&"			return '&'
+<eval,line>"|"			return '|'
 
 <eval,line>"=="			return '=='
 <eval,line>"!="			return '!='
@@ -76,7 +82,8 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 
 "@{"				this.begin('eval'); return '@{';
 "@set"				this.begin('line'); return '@set'
-"@macro" 			this.begin('line'); return '@macro';
+"@def"	 			this.begin('line'); return '@def';
+"@macro"	 		this.begin('line'); return '@def';
 "@repeat" 			this.begin('line'); return '@repeat';
 "@include"			this.begin('line'); return '@include';
 "@if"				this.begin('line'); return '@if';
@@ -84,7 +91,7 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 "@else"				return '@else';
 "@end"\n			return '@end';
 
-<INITIAL>[^@]+						return 'VERBATIM';
+<INITIAL>[^@]+				return 'VERBATIM';
 (?:.|\n) 					return 'VERBATIM';
 
 
