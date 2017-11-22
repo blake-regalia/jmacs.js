@@ -4,10 +4,10 @@
 [![Dependency Status](https://david-dm.org/blake-regalia/jmacs.js.svg)](https://david-dm.org/blake-regalia/jmacs.js)
 [![dependencies Status](https://david-dm.org/blake-regalia/jmacs.js/dev-status.svg)](https://david-dm.org/blake-regalia/jmacs.js?type=dev)[![devDependencies Status](https://david-dm.org/blake-regalia/jmacs.js/dev-status.svg)](https://david-dm.org/blake-regalia/jmacs.js?type=dev)
 
-Simple and elegant macros for JavaScript that function much closer to the macros in C than the alternative JavaScript macro library.
+Simple and elegant macros for JavaScript that function much closer to the macros in C than the *common alternative* JavaScript macro library.
 
 ## Install
-`npm install jmacs`
+`npm install --save-dev jmacs`
 
 ## Syntax
 The syntax for this language was inspired by [Builder](https://github.com/electricimp/Builder). The **jmacs** library aims to improve upon the shortcomings of Builder by formally defining the underlying grammar using [Jison](https://github.com/zaach/jison), along with some complementary features.
@@ -27,7 +27,12 @@ Defines a new macro with the identifier given by `name` which accepts the given 
 *Example:*
  - `input/example.js`
 	```
+	@def comment(str)
+	    // @{str}
+	@end
+
 	@def greet(who='world')
+	    @{comment('say hello to '+who)}
 		console.log('hello, @{who}!');
 	@end
 	
@@ -37,7 +42,9 @@ Defines a new macro with the identifier given by `name` which accepts the given 
 
  - `output/example.js`
 	```
+	// say hello to world
 	console.log('hello, world!');
+	// say hello to you
 	console.log('hello, you!');
 	```
 
