@@ -12,6 +12,9 @@
   "keywords": [
     "macro"
   ],
+  "scripts": {
+    "test": "gulp test"
+  },
   "dependencies": {},
   "devDependencies": {
     "ebnf-parser": "^0.1.10",

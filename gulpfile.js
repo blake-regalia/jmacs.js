@@ -18,7 +18,7 @@ soda(gulp, {
 	inputs: {
 		debug: 'js',
 		language: 'language',
-		main: 'js',
+		main: ['js', 'test'],
 	},
 
 	//
@@ -27,9 +27,12 @@ soda(gulp, {
 		js: [
 			'copy',
 			'develop: copy',
-			// 'istanbul',
-			// 'mocha: istanbul',
-			'mocha',
+		],
+
+		// testable
+		test: [
+			'istanbul',
+			'mocha: istanbul',
 		],
 
 		// compiling language compiler from jison

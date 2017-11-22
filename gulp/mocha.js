@@ -13,7 +13,6 @@ module.exports = Object.assign(function(gulp, $, p_src, p_dest, f_done) {
 			})
 		// .pipe($.istanbul.writeReports())
 		// 	.on('end', () => {
-		// 		$.util.log('hey');
 		// 		f_done(e_mocha);
 		// 	});
 }, {

@@ -11,7 +11,7 @@
 %right TERNARY
 %left '||'
 %left '&&'
-%left '===' ==' '!='
+%left '===' '==' '!='
 %left '<' '>' '<=' '>='
 %left '+' '-'
 %left '>>>' '>>' '<<'

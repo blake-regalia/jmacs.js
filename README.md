@@ -2,7 +2,7 @@
 [![Build Status via Travis CI](https://travis-ci.org/blake-regalia/jmacs.js.png?branch=master)](https://travis-ci.org/blake-regalia/jmacs.js)
 [![NPM version](https://img.shields.io/npm/v/jmacs.svg)](https://www.npmjs.com/package/jmacs)
 [![Dependency Status](https://david-dm.org/blake-regalia/jmacs.js.svg)](https://david-dm.org/blake-regalia/jmacs.js)
-[![dependencies Status](https://david-dm.org/blake-regalia/jmacs.js/dev-status.svg)](https://david-dm.org/blake-regalia/jmacs.js?type=dev)[![devDependencies Status](https://david-dm.org/blake-regalia/jmacs.js/dev-status.svg)](https://david-dm.org/blake-regalia/jmacs.js?type=dev)
+[![dependencies Status](https://david-dm.org/blake-regalia/jmacs.js/dev-status.svg)](https://david-dm.org/blake-regalia/jmacs.js?type=dev)
 
 Simple and elegant macros for JavaScript that function much closer to the macros in C than the *common alternative* JavaScript macro library.
 
