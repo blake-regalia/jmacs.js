@@ -131,4 +131,20 @@ Static properties and static functions on the `Math` object, and prototype funct
 @{replace(word, 'llo', 'y')}  // hey
 ```
 
+
+### Use with gulp
+
+A simple plug-and-play [gulp-soda]() recipe for a jmacs transformation is provided at [gulp-sample/jmacs.js](gulp-sample/jmacs.js).
+
+```bash
+$ npm install -D gulp-soda
+$ mkdir gulp
+$ curl -o gulp/jmacs.js https://github.com/blake-regalia/jmacs.js/tree/master/gulp-sample/jmacs.js
+$ curl -o gulpfile.js https://github.com/blake-regalia/gulp-soda.js/tree/master/example/testable.js
+$ gulp install
+$ gulp
+```
+
+
+
 ... And many more yet to be documented features
