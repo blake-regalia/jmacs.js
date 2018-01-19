@@ -116,8 +116,8 @@ In addition, the negation `!` operator and the ternary `?` operators work the sa
 @{!value? 'yes': 'no'}  // no
 ```
 
-### Math and String
-Static properties and static functions on the `Math` object, and prototype functions on the `String` object in JavaScript are exposed as builtin variables/functions in jmacs.
+### Math, String, and Array
+Static properties and static functions on the `Math` object, and prototype functions on the `String` and `Array` objects in JavaScript are exposed as builtin variables/functions in jmacs.
 
 ```
 @{PI}  // 3.141592653589793
@@ -129,6 +129,11 @@ Static properties and static functions on the `Math` object, and prototype funct
 @{length(word)}  // 5
 @{charAt(word, 0)}  // h
 @{replace(word, 'llo', 'y')}  // hey
+
+@let list = []
+@{push(list, 'one')}
+@{push(list, 'two')}
+@{pop(list)}  // 'two'
 ```
 
 
