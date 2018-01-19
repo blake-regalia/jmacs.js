@@ -47,6 +47,7 @@ body_section
 	: VERBATIM -> Verbatim($VERBATIM.replace(/^[ \t]+/, ' ').replace(/^\n+/, '\n'))
 	| if
 	| set
+	| let
 	| inline
 	| include
 	| repeat
@@ -66,6 +67,10 @@ else
 
 set
 	: '@set' NAME '='? expression -> Assignment($NAME, $expression)
+	;
+
+let
+	: '@let' NAME '='? expression -> Assignment($NAME, $expression)
 	;
 
 inline
@@ -192,5 +197,6 @@ terminal_value
 	| 'true' -> BooleanValue(true)
 	| 'false' -> BooleanValue(false)
 	| 'loop.index' -> Variable('loop_index')
+	| '[]' -> ArrayValue([])
 	;
 

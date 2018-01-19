@@ -65,7 +65,7 @@ describe('functions', () => {
 			@end
 
 			@def flip(a, b)
-				@{b} @{a}
+				@{b}\\ @{a}
 			@end
 
 			@{${s_method}(${a_args.join(', ')})}

@@ -26,6 +26,8 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 <eval,line>"?"			return '?'
 <eval,line>":"			return ':'
 
+<eval,line>"[]" 		return '[]'
+
 <eval,line>"("			return '('
 <eval,line>")"			return ')'
 <eval>"["				return '['
@@ -83,6 +85,7 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 
 "@{"				this.begin('eval'); return '@{';
 "@set"				this.begin('line'); return '@set'
+"@let"				this.begin('line'); return '@let'
 "@def"	 			this.begin('line'); return '@def';
 "@macro"	 		this.begin('line'); return '@def';
 "@repeat" 			this.begin('line'); return '@repeat';
