@@ -193,6 +193,7 @@ macro_call_args
 terminal_value
 	: NAME -> Variable($NAME)
 	| STRING -> StringValue($STRING)
+	| BACKTICK -> BacktickValue($BACKTICK)
 	| NUMBER -> NumberValue($NUMBER)
 	| 'true' -> BooleanValue(true)
 	| 'false' -> BooleanValue(false)

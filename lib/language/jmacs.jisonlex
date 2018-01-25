@@ -12,6 +12,7 @@ regex 			[~][/](?:[^/\n\\]|\\.)+[/][a-z]*
 
 single_quoted_string 	['](?:[^'\\]|\\.)*[']
 double_quoted_string 	["](?:[^"\\]|\\.)*["]
+backtick_quoted_string 	[`](?:[^`\\]|\\.)*[`]
 
 
 %x eval line regex
@@ -70,6 +71,7 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 <eval,line>{numeric}				return 'NUMBER'
 <eval,line>{single_quoted_string} 	return 'STRING'
 <eval,line>{double_quoted_string}	return 'STRING'
+<eval,line>{backtick_quoted_string} return 'BACKTICK'
 <eval,line>"loop.index"				return 'loop.index'
 
 <eval>"}"				this.popState(); return '}';
