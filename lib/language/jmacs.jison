@@ -177,6 +177,7 @@ operator
 
 value
 	: macro_call
+	| quiet_call
 	| terminal_value
 	| '(' expression ')' -> $expression
 	| '!' expression -> Not($expression)
@@ -184,6 +185,10 @@ value
 
 macro_call
 	: NAME macro_call_args -> MacroCall($NAME, $macro_call_args)
+	;
+
+quiet_call
+	: '#' macro_call -> merge({quiet:true}, $2)
 	;
 
 macro_call_args
@@ -199,5 +204,10 @@ terminal_value
 	| 'false' -> BooleanValue(false)
 	| 'loop.index' -> Variable('loop_index')
 	| '[]' -> ArrayValue([])
+	| '[' array_values -> ArrayValue($2)
+	;
+
+array_values
+	: (expression ',')* expression? ']' -> push($1, $2)
 	;
 

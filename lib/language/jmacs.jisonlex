@@ -31,8 +31,8 @@ backtick_quoted_string 	[`](?:[^`\\]|\\.)*[`]
 
 <eval,line>"("			return '('
 <eval,line>")"			return ')'
-<eval>"["				return '['
-<eval>"]"				return ']'
+<eval,line>"["			return '['
+<eval,line>"]"			return ']'
 
 <eval,line>"+"			return '+'
 <eval,line>"-"			return '-'
@@ -62,6 +62,7 @@ backtick_quoted_string 	[`](?:[^`\\]|\\.)*[`]
 <eval,line>"!"			return '!'
 
 <line>"="				return '='
+<eval>"#"				return '#'
 
 <eval,line>","			return ','
 
