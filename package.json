@@ -6,16 +6,21 @@
   "license": "ISC",
   "repository": "blake-regalia/jmacs.js",
   "files": [
-    "dist"
+    "build"
   ],
-  "main": "dist/main/jmacs.js",
+  "main": "build/main/jmacs.js",
   "keywords": [
     "macro"
   ],
+  "bin": {
+    "jmacs": "build/main/jmacs.js"
+  },
   "scripts": {
     "test": "gulp test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "commander": "^2.15.1"
+  },
   "devDependencies": {
     "ebnf-parser": "^0.1.10",
     "glob": "^7.1.1",

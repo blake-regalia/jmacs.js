@@ -9,15 +9,16 @@ module.exports = function(h_config) {
 	} = h_config;
 
 	// parse input
-	let h_result;
+	let g_result;
 	try {
-		h_result = parser.parse(s_input)(p_cwd);
+		g_result = parser.parse(s_input)(p_cwd);
 	}
 	catch(e_parse) {
+		throw e_parse;
 		return {
 			error: e_parse,
 		};
 	}
 	//
-	return h_result;
+	return g_result;
 };
