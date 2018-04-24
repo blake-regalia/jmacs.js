@@ -148,8 +148,9 @@ module.exports = {
 		'parser',
 	].map(s => `${pd_build}/language/${s}.js`),
 
-	// a subdirectory in dist
-	[`${pd_build}/:subdir`]: {
+	// a subdirectory in output dir
+	'&output': /(build|dist)/,
+	[`(&output)/:subdir`]: {
 		run: /* syntax: bash */ `
 			mkdir -p $@
 		`,
