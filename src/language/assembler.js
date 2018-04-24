@@ -449,6 +449,10 @@ module.exports = (a_sections) => {
 								this[__JMACS.is_output] = true;
 								this.output = a_output;
 							}
+
+							valueOf() {
+								return this.output.map(z => z+'').join('');
+							}
 						},
 
 						is_output: '**IS_JMACS_OUTPUT**',

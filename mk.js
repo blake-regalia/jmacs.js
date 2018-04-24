@@ -45,6 +45,18 @@ module.exports = {
 		].map(s => `${pd_build_syntax}/${s}`),
 	],
 
+	publish: {
+		deps: ['all'],
+		run: /* syntax: bash */ `
+			# publish jmacs
+			npm publish
+
+			# publish eslint-plugin-jmacs
+			cd ${pd_build_eslint}
+			npm publish
+		`,
+	},
+
 	[`${pd_build_eslint}/package.json`]: {
 		deps: [
 			'src/eslint-plugin/package.json',
