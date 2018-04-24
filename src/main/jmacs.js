@@ -8,9 +8,11 @@ const main = module.exports = {
 	load(p_file, s_prepend='') {
 		let s_input = fs.readFileSync(p_file, 'utf8');
 
+		let p_file_resolved = path.resolve(p_file);
 		return compiler({
 			input: s_prepend+s_input,
-			cwd: path.dirname(path.resolve(p_file)),
+			cwd: path.dirname(p_file_resolved),
+			path: p_file_resolved,
 		});
 	},
 

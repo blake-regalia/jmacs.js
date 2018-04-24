@@ -368,7 +368,9 @@ class evaluator {
 				${s_code}
 			})(${Object.keys(h_nodejs_env).map(s => `__JMACS.${s}`).join(',')})`;
 
-		let y_script = new vm.Script(s_script, {});
+		let y_script = new vm.Script(s_script, {
+			filename: this.state.path,
+		});
 
 		// // set global
 		// this.context.__global = this.context;
@@ -386,16 +388,18 @@ class evaluator {
 
 		// eval code
 		return y_script.runInNewContext(h_context, {
+			filename: this.state.path,
 			timeout: T_EVAL_TIMEOUT,
 		});
 	}
 }
 
 module.exports = (a_sections) => {
-	return function(p_cwd, h_global=null, h_macros={}) {
+	return function(p_cwd, p_file=null, h_global=null, h_macros={}) {
 
 		let h_states = {
 			cwd: p_cwd,
+			path: p_file,
 			macros: h_macros,
 			global: h_global,
 			output: '',
