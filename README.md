@@ -14,7 +14,7 @@ This macro preprocessor lets you write *'meta-code'*, inline with your ordinary 
  - **Linting** -- Yep! You can simultaneously lint your meta-code *and* the output script all at once. Just `npm i -D eslint-plugin-jmacs` and then extend `plugin:jmacs/all` in your .eslintrc 
  - **Syntax Highlighting** (for Sublime) -- Visual cues are important! Included is a .sublime-syntax file that extends the awesome [Ecmascript-Sublime](https://github.com/bathos/Ecmascript-Sublime) syntax. Right now it only supports `.js.jmacs` files. I'll work on getting this published on Package Control but in the meantime just `npm i -g jmacs` and then `ln -s $(npm config get prefix)/lib/node_modules/jmacs/src/syntax ${PATH_TO_SUBLIME_PACKAGES}/User/jmacs`.
 
-![Syntax Highlighting Showcase](https://github.com/blake.regalia/jmacs.js/raw/master/docs/syntax-eg.png)
+![Syntax Highlighting Showcase](https://github.com/blake-regalia/jmacs.js/raw/master/docs/syntax-eg.png)
 
 ## Quick overview
 There are a few ways to enter this meta-environment:
@@ -186,7 +186,7 @@ Use this token to denote the end of a verbatim section, i.e., after a conditiona
 ### `@>>` -- define a macro but remove all whitespace
 A great use for macros is to construct regular expressions. This token makes it easy to spread out the contents of your regex for readability as well as to reuse frequent sub-patterns by building them with macros.
 
-![Syntax Highlighting Showcase](https://github.com/blake.regalia/jmacs.js/raw/master/docs/regex-eg.png)
+![Syntax Highlighting Showcase](https://github.com/blake-regalia/jmacs.js/raw/master/docs/regex-eg.png)
 
 > The `@//@regex` is a type of syntax directive that hints to the syntax highlighter how it should interpret this section of verbatim code.
 
