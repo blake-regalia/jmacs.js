@@ -57,6 +57,14 @@ module.exports = {
 		`,
 	},
 
+	patch: {
+		deps: ['all'],
+		run: /* syntax: bash */ `
+			npm version patch
+			
+		`,
+	},
+
 	[`${pd_build_eslint}/package.json`]: {
 		deps: [
 			'src/eslint-plugin/package.json',
