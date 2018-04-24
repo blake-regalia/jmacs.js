@@ -45,30 +45,30 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 
 /* escape '@' character */
 [@][@]					return 'ESCAPED_AT';
-[\s]*[@][/][/][^\n]*\n 	{ /* ignore line comments */ }
+[ \t]*[@][/][/][^\n]*\n 	{ /* ignore line comments */ }
 /*[@][#][^\n]*\n 	{ /* ignore line comments / } /**/
 /*[@]\s*[/][*][^]*[*][/] 	{ /* ignore block comments *       / }  /**/
 
 "@{"				this.begin('jm');   return '@{';
 "@.{"				this.begin('jm');   return '@.{';
 "@*{"				this.begin('jm');   return '@*{';
-[\s]*"@."				this.begin('jm_line'); return '@.';
-[\s]*"@$"\s?				this.begin('jm_line'); return '@global';
-[\s]*"@global"\s?			this.begin('jm_line'); return '@global';
-[\s]*"@-"\s?				this.begin('jm_line'); return '@if';
-[\s]*"@if"\s?				this.begin('jm_line'); return '@if';
-[\s]*"@+"\s?				this.begin('jm_line'); return '@else-if';
-[\s]*"@else-if"\s?			this.begin('jm_line'); return '@else-if';
-[\s]*"@:"				return '@else';
-[\s]*"@else"				return '@else';
-[\s]*"@;"				this.begin('jm_line'); return '@end';
-[\s]*"@end"				this.begin('jm_line'); return '@end';
-[\s]*"@>"\s?				this.begin('jm_line'); return '@def';
-[\s]*"@def"\s?	 			this.begin('jm_line'); return '@def';
-[\s]*"@>>"\s?				this.begin('jm_line'); return '@def-cram';
-[\s]*"@def-cram"\s?			this.begin('jm_line'); return '@def-cram';
-[\s]*"@^"\s?				this.begin('jm_line'); return '@import';
-[\s]*"@import"\s?			this.begin('jm_line'); return '@import';
+[ \t]*"@."				this.begin('jm_line'); return '@.';
+[ \t]*"@$"[ \t]?				this.begin('jm_line'); return '@global';
+[ \t]*"@global"[ \t]?			this.begin('jm_line'); return '@global';
+[ \t]*"@-"[ \t]?				this.begin('jm_line'); return '@if';
+[ \t]*"@if"[ \t]?				this.begin('jm_line'); return '@if';
+[ \t]*"@+"[ \t]?				this.begin('jm_line'); return '@else-if';
+[ \t]*"@else-if"[ \t]?			this.begin('jm_line'); return '@else-if';
+[ \t]*"@:"				return '@else';
+[ \t]*"@else"				return '@else';
+[ \t]*"@;"				this.begin('jm_line'); return '@end';
+[ \t]*"@end"				this.begin('jm_line'); return '@end';
+[ \t]*"@>"[ \t]?				this.begin('jm_line'); return '@def';
+[ \t]*"@def"[ \t]?	 			this.begin('jm_line'); return '@def';
+[ \t]*"@>>"[ \t]?				this.begin('jm_line'); return '@def-cram';
+[ \t]*"@def-cram"[ \t]?			this.begin('jm_line'); return '@def-cram';
+[ \t]*"@^"[ \t]?				this.begin('jm_line'); return '@import';
+[ \t]*"@import"[ \t]?			this.begin('jm_line'); return '@import';
 
 
 [\s\r\n]+ 			return 'VERBATIM'

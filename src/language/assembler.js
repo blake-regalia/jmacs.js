@@ -399,7 +399,6 @@ module.exports = (a_sections) => {
 			exports: new Set(),
 		};
 
-
 		let k_evaluator = new evaluator(h_states);
 
 		let g_codified = k_evaluator.codify(a_sections);
