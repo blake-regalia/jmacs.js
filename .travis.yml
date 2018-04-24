@@ -2,5 +2,5 @@ language: node_js
 node_js:
   - '9'
 before_script:
-  - npm install -g mkjs
+  - npm install -g mkjs-cli
 script: npm test
