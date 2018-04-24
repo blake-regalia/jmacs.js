@@ -45,7 +45,7 @@ const h_codify = {
 
 		return {
 			lint: [],
-			meta: g_output.code,
+			meta: g_result.meta.code,
 		};
 	},
 
