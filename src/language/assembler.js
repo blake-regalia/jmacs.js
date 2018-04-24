@@ -31,17 +31,13 @@ const h_codify = {
 		// import exports
 		this.state.exports = new Set([...this.state.exports, ...g_result.exports]);
 
-		let g_output;
-		try {
-			g_output = g_result.run();
-		}
-		catch(e_run) {
-			throw new Error(`cannot import '${p_file}' because it has a syntax error: ${e_run.message}\n${e_run.stack}`);
-			// return {
-			// 	lint: [],
-			// 	meta: '',
-			// };
-		}
+		// let g_output;
+		// try {
+		// 	g_output = g_result.run();
+		// }
+		// catch(e_run) {
+		// 	throw new Error(`cannot import '${p_file}' because it has a syntax error: ${e_run.message}\n${e_run.stack}`);
+		// }
 
 		return {
 			lint: [],
@@ -254,6 +250,7 @@ const h_codify = {
 		}
 
 		// add to global identifiers
+		let b_first = !this.state.exports.has(s_var);
 		this.state.exports.add(s_var);
 
 		return {
@@ -272,7 +269,7 @@ const h_codify = {
 				srcmap(s_oper+s_value, {first_column:i_col, first_line:i_row}),
 				'\n',
 			],
-			meta: /* syntax: js */ `global['${s_var}'] ${s_oper} __JMACS.safe_exec(() => (${s_value}));`,
+			meta: /* syntax: js */ `${b_first? 'let ': ''}${s_var} = global['${s_var}'] ${s_oper} __JMACS.safe_exec(() => (${s_value}));`,
 		};
 	},
 
@@ -487,22 +484,32 @@ module.exports = (a_sections) => {
 							return a_output;
 						},
 
-						safe_exec: (__f, s_prev) => {
+						safe_exec: (__f, s_prev, c_depth=0) => {
 							try {
 								return __f();
 							} catch(e_append) {
 								// allow reference errors
 								// doesn't work anymore? e_append instance ReferenceError
 								if(/^ReferenceError:/.test(e_append.stack)) {
+									if(c_depth > 4) {
+										debugger;
+									}
+
 									let s_identifier = e_append.message.replace(/^(.+) is not defined$/, '$1');
 
 									// it is defined in global scope
 									if(s_identifier in global) {
+										// prevent infinite loop
+										if('*'+s_identifier === s_prev) {
+											debugger;
+											throw new Error(\`cannot use identifier \${s_identifier}\`);
+										}
+
 										// re-evaluate
 										return __JMACS.safe_exec(new Function(\`
 											let \${s_identifier} = global[\${JSON.stringify(s_identifier)}];
 											return (\${__f.toString()})();
-										\`), '*'+s_identifier);
+										\`), '*'+s_identifier, c_depth+1);
 									}
 
 									// prevent infinite loop
@@ -518,7 +525,7 @@ module.exports = (a_sections) => {
 									return __JMACS.safe_exec(new Function(\`
 										let \${s_identifier};
 										return (\${__f.toString()})();
-									\`), s_identifier);
+									\`), s_identifier, c_depth+1);
 								}
 								else {
 									debugger;
