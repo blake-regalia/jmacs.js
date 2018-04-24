@@ -453,6 +453,10 @@ module.exports = (a_sections) => {
 							valueOf() {
 								return this.output.map(z => z+'').join('');
 							}
+
+							toString() {
+								return this.valueOf();
+							}
 						},
 
 						is_output: '**IS_JMACS_OUTPUT**',
