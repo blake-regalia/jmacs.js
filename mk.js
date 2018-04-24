@@ -8,7 +8,7 @@ let pd_build = 'build';
 let pd_build_main = `${pd_build}/main`;
 let pd_build_language = `${pd_build}/language`;
 let pd_build_syntax = `${pd_build}/syntax`;
-let pd_build_eslint = `${pd_build}/eslint-plugin`;
+let pd_build_eslint = `dist/eslint-plugin`;
 
 const rule_copy = (s_dir, s_file=':file.js') => ({
 	// copy rule
