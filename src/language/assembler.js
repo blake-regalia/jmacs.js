@@ -2,10 +2,10 @@ const path = require('path');
 const vm = require('vm');
 const sourcemap = require('source-map');
 
-// const T_EVAL_TIMEOUT = 8000;  // 8 seconds
-const T_EVAL_TIMEOUT = 8000*8; // 64 seconds
+const T_EVAL_TIMEOUT = 8000;  // 8 seconds
+// const T_EVAL_TIMEOUT = 8000*8; // 64 seconds
 
-const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)(.+?);?$/;
+const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)((?:[|^%*/+-]|<<|>>>?)?=)(.+?);?$/;
 const R_IDENTIFIER_SAFE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 
 const srcmap = (z_code, g_loc, s_name=null) => {
@@ -242,7 +242,8 @@ const h_codify = {
 	global({def:g_def}) {
 		let m_global = R_GLOBAL.exec(g_def.code);
 		if(!m_global) throw new Error(`invalid global assignment ${g_def.code}`);
-		let [, s_var, s_ws, s_value] = m_global;
+		let [, s_var, s_ws, s_oper, s_value] = m_global;
+		// let s_ws = s_ws1 + s_ws_2;
 		let n_nls = s_ws.includes('\n')? s_ws.match(/\n/g).length: 0;
 
 		let i_col = g_def.loc.first_column;
@@ -268,10 +269,10 @@ const h_codify = {
 						srcmap(s_var, g_def.loc),
 						`'] `,
 					]),
-				srcmap(s_value, {first_column:i_col, first_line:i_row}),
+				srcmap(s_oper+s_value, {first_column:i_col, first_line:i_row}),
 				'\n',
 			],
-			meta: /* syntax: js */ `global['${s_var}'] ${s_value};`,
+			meta: /* syntax: js */ `global['${s_var}'] ${s_oper} __JMACS.safe_exec(() => (${s_value}));`,
 		};
 	},
 
@@ -523,7 +524,7 @@ module.exports = (a_sections) => {
 							}
 						},
 					};
-
+debugger;
 					${g_codified.meta}
 					return (() => {
 						let ysn_output = (new __JMACS.sourcemap.SourceNode(null, null, null, __JMACS_OUTPUT))
@@ -535,7 +536,7 @@ module.exports = (a_sections) => {
 						};
 					})();
 				`;
-
+debugger;
 				let z_result;
 				try {
 					z_result = k_evaluator.run(s_eval);

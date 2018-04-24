@@ -5257,13 +5257,13 @@ contexts:
       pop: true
 
   regex_AFTER_OPEN:
-    - meta_scope: string.regexp.es
+    - meta_scope: string.regexp.after_open.es
     - meta_include_prototype: false
     # It’s okay to put this here; comments are always matched first.
     - include: newline_invalid_pop
     - include: regex_COMMON_NOT_IN_CLASS_SET
     - match: '{{macro_ahead}}'
-      push: macros_set
+      push: macro_in_pop
 
   regex_ANY_CHILD_CONTEXT:
     # Child contexts are tricky here because we need to be able to terminate
@@ -5377,7 +5377,7 @@ contexts:
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON
     - match: '{{macro_ahead}}'
-      set: macros_set
+      push: macro_in_pop
 
   regex_AFTER_ASSERTION_NEGATIVE_OPEN:
     - meta_scope: meta.group.assertion.negative.regexp
@@ -5388,7 +5388,7 @@ contexts:
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
     - match: '{{macro_ahead}}'
-      set: macros_set
+      push: macro_in_pop
 
   regex_AFTER_ASSERTION_POSITIVE_OPEN:
     - meta_scope: meta.group.assertion.positive.regexp
@@ -5399,7 +5399,7 @@ contexts:
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
     - match: '{{macro_ahead}}'
-      set: macros_set
+      push: macro_in_pop
 
   regex_AFTER_NON_CAPTURE_OPEN:
     - meta_scope: meta.group.non-capturing.regexp
@@ -5410,7 +5410,7 @@ contexts:
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
     - match: '{{macro_ahead}}'
-      set: macros_set
+      push: macro_in_pop
 
   regex_AFTER_CAPTURE_OPEN:
     - meta_scope: meta.group.capturing.regexp
@@ -5421,7 +5421,7 @@ contexts:
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
     - match: '{{macro_ahead}}'
-      set: macros_set
+      push: macro_in_pop
 
   regex_AFTER_PATTERN:
     - meta_include_prototype: false
