@@ -1,15 +1,20 @@
 
+let g_package_json = require('./package.json');
+let s_jmacs_version = g_package_json.version;
+
 let s_dep_self_dir = '$(dirname "$@")';
 
 let pd_build = 'build';
 let pd_build_main = `${pd_build}/main`;
 let pd_build_language = `${pd_build}/language`;
+let pd_build_syntax = `${pd_build}/syntax`;
+let pd_build_eslint = `${pd_build}/eslint-plugin`;
 
-const rule_copy = (s) => ({
+const rule_copy = (s_dir, s_file=':file.js') => ({
 	// copy rule
-	[`${pd_build}/${s}/:file.js`]: {
+	[`${pd_build}/${s_dir}/${s_file}`]: {
 		deps: [
-			`src/${s}/$file.js`,
+			`src/${s_dir}/${s_file.replace(/^:/, '$')}`,
 			s_dep_self_dir,
 		],
 		run: /* syntax: bash */ `
@@ -22,7 +27,65 @@ module.exports = {
 	all: [
 		'main',
 		'language',
+		'eslint',
+		// 'syntax',
 	],
+
+	eslint: [
+		...[
+			'package.json',
+			'index.js',
+		].map(s => `${pd_build_eslint}/${s}`),
+	],
+
+	syntax: [
+		...[
+			'excelsior.tmTheme',
+			'jmacs.sublime-syntax',
+		].map(s => `${pd_build_syntax}/${s}`),
+	],
+
+	[`${pd_build_eslint}/package.json`]: {
+		deps: [
+			'src/eslint-plugin/package.json',
+			'./package.json',
+			s_dep_self_dir,
+		],
+		run: /* syntax: bash */ `
+			cat $1 | npx lambduh "`
+			+ /* syntax:js */ `json =>
+				Object.assign(json, {
+					version: '${s_jmacs_version}',
+					dependencies: {
+						jmacs: '^${s_jmacs_version}',
+					},
+				})
+				&& json`.replace(/[\n\t]/g, '')
+			+ /* syntax: bash */ `" > $@
+		`,
+	},
+
+	...rule_copy('syntax', 'excelsior.tmTheme'),
+	...rule_copy('syntax', 'jmacs.sublime-syntax'),
+
+	[`${pd_build_eslint}/index.js`]: {
+		deps: [
+			'src/eslint-plugin/index.js',
+			s_dep_self_dir,
+		],
+		run: /* syntax: bash */ `
+			cp $1 $@
+		`,
+	},
+
+	test: {
+		deps: [
+			'test/main/*.js',
+		],
+		run: /* syntax: bash */ `
+			mocha $1
+		`,
+	},
 
 	// rules
 	...[

@@ -403,6 +403,11 @@ contexts:
     - match: '{{macro_open}}\*\{'
       scope: support.macro.jmacs.es meta.macro.js.jmacs.es
       push: [macro_exit_brace, macro_meta, macro_statements]
+    - match: '({{macro_open}}//)([^\n]*)(\n)'
+      captures:
+        1: comment.line.jmacs.es meta.macro.js.set.jmacs.es meta.comment.border.es punctuation.definition.comment.begin.es
+        2: comment.line.jmacs.es meta.macro.js.set.jmacs.es
+        3: meta.macro.js.set.jmacs.es
 
   macro_meta:
     - meta_content_scope: meta.macro.js.meta.jmacs.es
@@ -524,6 +529,11 @@ contexts:
       set:
         - - meta_scope: string.regexp.pla.es
           - meta_include_prototype: false
+          # - match: '(?<!@)(@//)([^\n]*)(\n)'
+          #   captures:
+          #     1: comment.line.jmacs.es meta.macro.js.set.jmacs.es meta.comment.border.es punctuation.definition.comment.begin.es
+          #     2: comment.line.jmacs.es meta.macro.js.set.jmacs.es
+          #     3: meta.macro.js.set.jmacs.es
           - include: regex_COMMON_NOT_IN_CLASS_SET
           - match: '(?=@;)'
             pop: true
@@ -1518,6 +1528,8 @@ contexts:
         2: entity.name.function.initCap.es
         3: entity.name.function.es
       set: functionDeclaration_AFTER_NAME
+    - match: '{{macro_in_ahead}}'
+      set: [functionDeclaration_AFTER_NAME, macro_in_pop]
     - include: other_illegal_pop
 
   functionDeclaration_AFTER_NAME:
@@ -1526,6 +1538,7 @@ contexts:
         1: punctuation.definition.parameters.function.begin.es
         2: meta.brace.round.js # ^BS
       set: [ functionDeclaration_AFTER_PARAMS, parameters ]
+    - include: macro_in
     - include: other_illegal_pop
 
   functionDeclaration_AFTER_PARAMS:
@@ -1534,6 +1547,7 @@ contexts:
         1: punctuation.definition.parameters.function.end.es
         2: meta.brace.round.js # ^BS
       set: functionDeclaration_BEFORE_BRACE
+    - include: macro_in
     - include: other_illegal
 
   functionDeclaration_BEFORE_BRACE:
@@ -4526,6 +4540,8 @@ contexts:
         2: meta.brace.square.js # ^BS
       set: [ accessorMethod_AFTER_GET_NAME, computedProp_AFTER_AE, assignmentExpression ]
     # Possibly this is an object property.
+    - match: '{{macro_in_ahead}}'
+      set: [accessorMethod_AFTER_GET_NAME, macro_in_pop]
     - include: other_illegal_pop
 
   accessorMethod_AFTER_GET_NAME:
@@ -4594,6 +4610,8 @@ contexts:
         1: punctuation.definition.accessor.begin.es
         2: meta.brace.square.js # ^BS
       set: [ accessorMethod_AFTER_SET_NAME, computedProp_AFTER_AE, assignmentExpression ]
+    - match: '{{macro_in_ahead}}'
+      set: [accessorMethod_AFTER_GET_NAME, macro_in_pop]
     - include: other_illegal_pop
 
   accessorMethod_AFTER_SET_NAME:
@@ -5228,6 +5246,7 @@ contexts:
   parameters_AFTER_REST_PARAM:
     - match: '(?=\))'
       pop: true
+    - include: macro_in
     - include: other_illegal
 
 # STRINGS & REGEX ##############################################################
@@ -5357,7 +5376,8 @@ contexts:
     - match: '\/'
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON
-    - include: macro_in
+    - match: '{{macro_ahead}}'
+      set: macros_set
 
   regex_AFTER_ASSERTION_NEGATIVE_OPEN:
     - meta_scope: meta.group.assertion.negative.regexp
@@ -5367,7 +5387,8 @@ contexts:
       pop: true
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
-    - include: macro_in
+    - match: '{{macro_ahead}}'
+      set: macros_set
 
   regex_AFTER_ASSERTION_POSITIVE_OPEN:
     - meta_scope: meta.group.assertion.positive.regexp
@@ -5377,7 +5398,8 @@ contexts:
       pop: true
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
-    - include: macro_in
+    - match: '{{macro_ahead}}'
+      set: macros_set
 
   regex_AFTER_NON_CAPTURE_OPEN:
     - meta_scope: meta.group.non-capturing.regexp
@@ -5387,7 +5409,8 @@ contexts:
       pop: true
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
-    - include: macro_in
+    - match: '{{macro_ahead}}'
+      set: macros_set
 
   regex_AFTER_CAPTURE_OPEN:
     - meta_scope: meta.group.capturing.regexp
@@ -5397,7 +5420,8 @@ contexts:
       pop: true
     - include: regex_ANY_CHILD_CONTEXT
     - include: regex_COMMON_NOT_IN_CLASS_SET
-    - include: macro_in
+    - match: '{{macro_ahead}}'
+      set: macros_set
 
   regex_AFTER_PATTERN:
     - meta_include_prototype: false

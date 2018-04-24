@@ -1,146 +1,293 @@
-const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const sourcemap = require('source-map');
 
-const T_EVAL_TIMEOUT = 8000;  // 8 seconds
+// const T_EVAL_TIMEOUT = 8000;  // 8 seconds
+const T_EVAL_TIMEOUT = 8000*8; // 64 seconds
 
-const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*(.+?);?$/;
+const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)(.+?);?$/;
+const R_IDENTIFIER_SAFE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 
-const h_eval = {
-	verbatim(h_verbatim) {
-		return h_verbatim.value;
-	},
-
-	inline(h_inline, y_context) {
-		let z_result = this.run(h_inline.code, y_context);
-		debugger;
-		return h_inline.suppress? '': z_result+'';
-	},
-
-	if(h_if) {
-		if(this.run(h_if.if)) {
-			return this.eval(h_if.then);
-		}
-		else {
-			let s_output = '';
-
-			let b_elseifs = h_if.elseifs.some((h) => {
-				if(this.run(h.if)) {
-					s_output = this.eval(h.then);
-					return true;
-				}
-			});
-
-			if(!b_elseifs && this.run(h_if.else)) {
-				s_output = this.eval(h_if.else);
-			}
-
-			return s_output;
-		}
-	},
-
-	macro(h_macro) {
-		let f_macro = this.evaluate(`function ${h_macro.def} {
-			let __JMACS_OUTPUT = '';
-			${h_macro.body.map(this.codify).join('\n')}
-			return __JMACS_OUTPUT;
-		}`);
-
-		debugger;
-		this.macros[f_macro.name] = f_macro;
-		return '';
-	},
-
-	import(h_import, h_context) {
-		let s_file = this.evaluate(h_import.file, h_context);
-
-		let p_file = path.resolve(this.cwd, s_file);
-		let s_input = fs.readFileSync(p_file, 'utf8');
-		let h_result = require('./compiler')({
-			input: s_input,
-			cwd: path.dirname(p_file),
-		});
-
-		if(h_result.error) {
-			throw h_result.error;
-		}
-
-		// merge macros and globals
-		let h_import_macros = h_result.macros;
-		for(let s_macro in h_import_macros) {
-			this.macros[s_macro] = h_import_macros[s_macro];
-		}
-
-		let h_import_global = h_result.global;
-		for(let s_global in h_import_global) {
-			this.global[s_global] = h_import_global[s_global];
-		}
-
-		// append output
-		return h_result.output;
-	},
+const srcmap = (z_code, g_loc, s_name=null) => {
+	// ysn_meta.add(
+	return (new sourcemap.SourceNode(
+		g_loc.first_line,
+		g_loc.first_column,
+		'meta',
+		z_code,
+		s_name,
+	));
 };
 
 const h_codify = {
-	import(g) {
-		let s_file = eval(g.file);
+	import({target:g_target}) {
+		let s_file = eval(g_target.code);
 		let s_cwd = process.cwd();
 		let p_file = path.join(this.state.cwd, s_file);
 		const jmacs = require('../main/jmacs.js');
-		debugger;
-		return jmacs.load(p_file).output;
+
+		let g_result = jmacs.load(p_file);
+
+		// import exports
+		this.state.exports = new Set([...this.state.exports, ...g_result.exports]);
+
+		let g_output;
+		try {
+			g_output = g_result.run();
+		}
+		catch(e_run) {
+			throw new Error(`cannot import '${p_file}' because it has a syntax error`);
+			// return {
+			// 	lint: [],
+			// 	meta: '',
+			// };
+		}
+
+		return {
+			lint: [],
+			meta: g_output.code,
+		};
 	},
 
-	macro(g) {
-		return `function ${g.macro} {
-			let __JMACS_OUTPUT = '';
-			${this.codify(g.body)}
-			return __JMACS_OUTPUT;
-		}`;
+	macro({head:g_head, body:a_body, cram:b_cram}) {
+		if(b_cram) {
+			for(let g_node of a_body) {
+				if(g_node.text) g_node.text = g_node.text.replace(/\s/g, '');
+			}
+		}
+		else {
+			// gobble indent
+			let nl_body = a_body.length;
+			for(let i_text=0; i_text<nl_body-1; i_text++) {
+				if(a_body[i_text].text) {
+					let s_text_0 = a_body[i_text].text;
+					let s_pre = s_text_0.replace(/^(\s*)[^]*$/, '$1');
+					let nl_pre = s_pre.length;
+
+					// // trim whitespace from beginning while we're here
+					// a_body[i_text].text = s_text_0.slice(s_pre.length);
+					// if(!a_body[i_text].text) {
+					// 	a_body.splice(i_text, 1);
+					// 	nl_body -= 1;
+					// }
+
+					let r_pre_nl = new RegExp('\\n'+s_pre, 'g');
+					let r_pre_anchor = new RegExp('^'+s_pre);
+
+					let b_prev_newline = false;
+					for(let g_node of a_body) {
+						if(g_node.text) {
+							if(b_prev_newline) {
+								if(r_pre_anchor.test(g_node.text)) {
+									g_node.text = g_node.text.replace(r_pre_anchor, '');
+									g_node.loc.first_column += nl_pre;
+									g_node.loc.last_column += nl_pre;
+								}
+							}
+							else {
+								g_node.text = g_node.text.replace(r_pre_nl, '');
+								g_node.loc.first_column += nl_pre;
+								g_node.loc.last_column += nl_pre;
+							}
+
+							b_prev_newline = g_node.text.endsWith('\n');
+						}
+						else if(g_node.line) {
+							b_prev_newline = true;
+						}
+						else {
+							b_prev_newline = false;
+						}
+					}
+
+					break;
+				}
+			}
+
+			// trim whitespace from end
+			for(let i_text=nl_body-1; i_text>=0; i_text--) {
+				if(a_body[i_text].text) {
+					let g_tail = a_body[i_text];
+					g_tail.text = g_tail.text.replace(/\n\s*$/, '');
+
+					if(!g_tail.text) {
+						a_body.splice(i_text, 1);
+						nl_body -= 1;
+					}
+
+					break;
+				}
+			}
+		}
+
+		let g_codified = this.codify(a_body);
+
+		// export function name
+		let s_name = g_head.code.replace(/^\s*([^\s\n*(]+)[^]*$/, '$1');
+		this.state.exports.add(s_name);
+
+		return {
+			lint: [
+				'function ',
+				srcmap(g_head.code.trim(), g_head.loc),
+				' {\n',
+				...g_codified.lint,
+				'}\n',
+			],
+			meta: /* syntax: js */ `function ${g_head.code} {
+				const __JMACS_OUTPUT = [];
+				${g_codified.meta}
+				return new __JMACS.output(__JMACS_OUTPUT);
+			}`,
+		};
 	},
 
-	verbatim: g => `__JMACS_OUTPUT += ${JSON.stringify(g.value)};`,
+	verbatim: ({text:s_text, loc:g_loc}) => ({
+		lint: [],
+		meta: /* syntax: js */ `
+			__JMACS_OUTPUT.push(
+				...__JMACS.srcmap(
+					${JSON.stringify(s_text)},
+					${JSON.stringify(g_loc)},
+					'verbatim',
+				));
+		`,
+	}),
 
-	inline: g => {
-		return g.suppress
-		? g.code
-		: /* syntax: js */ `
-			__JMACS_OUTPUT += __safe_exec(() => (${g.code}));
-		`
-	},
+	whitespace: ({text:s_ws}) => ({
+		lint: [],
+		meta: /* syntax: js */ `
+			__JMACS_OUTPUT.push(${JSON.stringify(s_ws)});
+		`,
+	}),
+
+	inline: ({expr:g_expr}) => ({
+		lint: [
+			'(() => (',
+			srcmap(g_expr.code, g_expr.loc),
+			'))();\n',
+		],
+		meta: /* syntax: js */ `
+			__JMACS_OUTPUT.push(
+				...__JMACS.srcmap(
+					__JMACS.safe_exec(() => (${g_expr.code})),
+					${JSON.stringify(g_expr.loc)},
+					'inline',
+				));
+		`,
+	}),
+
+	meta: ({meta:g_meta, line:b_line}) => ({
+		lint: [
+			srcmap(g_meta.code, g_meta.loc, b_line? 'line': 'block'),
+			'\n',
+		],
+		meta: g_meta.code,
+	}),
 
 	if(g) {
-		let s_output = `if(__safe_exec(() => (${g.if}))) {
-			${this.codify(g.then)}
-		}`;
+		let gc_then = this.codify(g.then);
+
+		let a_lint = [
+			'if(',
+			srcmap(g.if.code, g.if.loc),
+			') {\n',
+			gc_then.lint,
+			'}\n',
+		];
+
+		let s_meta = /* syntax: js */ `
+			if(__JMACS.safe_exec(() => (${g.if.code}))) {
+				${gc_then.meta}
+			}`;
 
 		for(let g_elseif of g.elseifs) {
-			s_output += `
-				else if(__safe_exec(() => (${g_elseif.if}))) {
-					${this.codify(g_elseif.then)}
+			let gc_elseif_then = this.codify(g_elseif.then);
+
+			a_lint.push(...[
+				'else if(',
+				srcmap(g_elseif.if.code, g_elseif.if.loc),
+				') {\n',
+				...gc_elseif_then.lint,
+				'}\n',
+			]);
+
+			s_meta += /* syntax: js */ `
+				else if(__JMACS.safe_exec(() => (${g_elseif.if.code}))) {
+					${gc_elseif_then.meta}
 				}`;
 		}
 
 		if(g.else) {
-			s_output += `
+			let gc_else_then = this.codify(g.else);
+
+			a_lint.push(...[
+				'else {\n',
+				...gc_else_then.lint,
+				'}\n',
+			]);
+
+			s_meta += /* syntax: js */ `
 				else {
-					${this.codify(g.else)}
+					${gc_else_then.meta}
 				}`;
 		}
 
-		return s_output;
+		return {
+			lint: a_lint,
+			meta: s_meta,
+		};
 	},
 
-	global(g) {
-		let m_global = R_GLOBAL.exec(g.code);
-		if(!m_global) throw new Error(`invalid global assignment ${g.code}`);
-		return /* syntax: js */ `__global['${m_global[1]}'] ${m_global[2]};`;
+	global({def:g_def}) {
+		let m_global = R_GLOBAL.exec(g_def.code);
+		if(!m_global) throw new Error(`invalid global assignment ${g_def.code}`);
+		let [, s_var, s_ws, s_value] = m_global;
+		let n_nls = s_ws.includes('\n')? s_ws.match(/\n/g).length: 0;
+
+		let i_col = g_def.loc.first_column;
+		let i_row = g_def.loc.first_line;
+		if(n_nls) {
+			i_col += n_nls;
+			i_row = /\n([^\n]+)$/.exec(s_ws)[1].length;
+		}
+
+		// add to global identifiers
+		this.state.exports.add(s_var);
+
+		return {
+			lint: [
+				...(R_IDENTIFIER_SAFE.test(s_var)
+					? [
+						'global.',
+						srcmap(s_var, g_def.loc),
+						' ',
+					]
+					: [
+						`global['`,
+						srcmap(s_var, g_def.loc),
+						`'] `,
+					]),
+				srcmap(s_value, {first_column:i_col, first_line:i_row}),
+				'\n',
+			],
+			meta: /* syntax: js */ `global['${s_var}'] ${s_value};`,
+		};
 	},
 
-	generator(g) {
-		return /* syntax: js */ `__JMACS_OUTPUT += [...(function*() {
-			${g.code}
-		})()].join('');`
+	generator({expr:g_expr}) {
+		return {
+			lint: [
+				'(function*() {\n',
+				srcmap(g_expr.code, g_expr.loc),
+				'})();\n',
+			],
+			meta: /* syntax: js */ `
+				debugger;
+				__JMACS_OUTPUT.push(...(function*() {
+					${g_expr.code}
+				})());`,
+		};
 	},
 };
 
@@ -154,41 +301,92 @@ class evaluator {
 
 	codify(z_syntax) {
 		if(Array.isArray(z_syntax)) {
-			return z_syntax.map(h => this.codify(h).join('\n')).join('\n');
+			let a_codified = [];
+			let g_prev = null;
+
+			let b_nws = false;
+			for(let g_node of z_syntax) {
+				if(b_nws) {
+					// codify non-whitespace
+					a_codified.push(this.codify(g_node));
+				}
+				else if('whitespace' === g_node.type) {
+					g_prev = g_node;
+				}
+				else {
+					// include previous whitespace after newline
+					if(g_prev) {
+						a_codified.push(this.codify(Object.assign(g_prev, {
+							text: g_prev.text.replace(/^[^]*?([^\n]*)$/, '$1'),
+						})));
+					}
+
+					// codify non-whitespace
+					a_codified.push(this.codify(g_node));
+
+					//
+					b_nws = true;
+				}
+			}
+
+			let a_lint = [];
+			let a_meta = [];
+
+			for(let g_node of a_codified) {
+				if(g_node.lint) a_lint.push(...g_node.lint);
+				a_meta.push(g_node.meta);
+			}
+
+			return {
+				lint: a_lint,
+				meta: a_meta.join('\n'),
+			};
 		}
 		else {
 			let f_codifier = h_codify[z_syntax.type];
 			if(!f_codifier) {
 				throw new Error(`codifier not exist: ${z_syntax.type}`);
 			}
-			return [f_codifier.apply(this, [z_syntax])];
+			return f_codifier.apply(this, [z_syntax]);
 		}
 	}
 
 	run(s_code) {
-		// prep script
-		let y_script = new vm.Script(s_code, {});
+		let h_module = {exports:{}};
+		let h_nodejs_env = {
+			__dirname: this.state.cwd,
+			__filename: this.state.path,
+			exports: h_module.exports,
+			module: h_module,
+			require: require,
+		};
 
-		// set global
-		this.context.__global = this.context;
+		// prep script
+		let s_script = /* syntax: js */ `
+			(function(${Object.keys(h_nodejs_env).join(',')}) {
+				${s_code}
+			})(${Object.keys(h_nodejs_env).map(s => `__JMACS.${s}`).join(',')})`;
+
+		let y_script = new vm.Script(s_script, {});
+
+		// // set global
+		// this.context.__global = this.context;
+		// this.context.global = global;
+
+		let h_context = {};
+		for(let _key of Reflect.ownKeys(global)) {
+			Reflect.defineProperty(h_context, _key,
+				Reflect.getOwnPropertyDescriptor(global, _key));
+		}
+
+		Object.assign(h_context, {
+			__JMACS: h_nodejs_env,
+		});
 
 		// eval code
-		return y_script.runInContext(this.context, {
+		return y_script.runInNewContext(h_context, {
 			timeout: T_EVAL_TIMEOUT,
 		});
-	}
-
-	eval(z_syntax) {
-		if(Array.isArray(z_syntax)) {
-			return z_syntax.map(h => this.codify(h).join('\n'));
-		}
-		else {
-			let s_evaluator = z_syntax.type;
-			if(!s_evaluator) {
-				throw new Error(`evaluator not exist: ${s_evaluator}`);
-			}
-			return h_eval[s_evaluator].apply(this, [z_syntax]);
-		}
 	}
 }
 
@@ -200,52 +398,142 @@ module.exports = (a_sections) => {
 			macros: h_macros,
 			global: h_global,
 			output: '',
+			exports: new Set(),
 		};
 
 
 		let k_evaluator = new evaluator(h_states);
 
-		let s_output = k_evaluator.eval(a_sections).join('\n');
+		let g_codified = k_evaluator.codify(a_sections);
+
+		let a_exports = [...h_states.exports];
+
+		let ysn_meta = new sourcemap.SourceNode(null, null, null, [
+			/* syntax: js */ `/* global ${
+				a_exports
+					.filter(s => R_IDENTIFIER_SAFE.test(s))
+					.join(', ')} */\n`,
+			...g_codified.lint,
+		]);
 
 		return {
-			output: s_output,
+			exports: a_exports,
+
+			meta: {
+				code: g_codified.meta,
+
+				lint: ysn_meta.toString(),
+
+				consumer: () => new sourcemap.SourceMapConsumer(ysn_meta.toStringWithSourceMap().map.toString()),
+			},
 
 			run() {
 				let s_eval = /* syntax: js */ `
-					let __JMACS_OUTPUT = '';
+					const __JMACS_OUTPUT = [];
 
-					const __safe_exec = (__f, s_prev) => {
-						try {
-							return __f();
-						} catch(e_append) {
-							// allow reference errors
-							if(e_append instanceof ReferenceError) {
-								let s_identifier = e_append.message.replace(/^(.+) is not defined$/, '$1');
+					const __JMACS = {
+						sourcemap: require('source-map'),
 
-								// prevent infinite loop
-								if(s_identifier === s_prev) {
-									debugger;
-									throw new Error(\`cannot use identifier \${s_identifier}\`);
+						output: class {
+							constructor(a_output) {
+								this.output = a_output;
+							}
+						},
+
+						srcmap: (z_code, g_loc, s_name=null) => {
+							if(z_code instanceof __JMACS.output) {
+								return z_code.output;
+							}
+
+							let i_row = g_loc.first_line;
+							let i_col = g_loc.first_column;
+
+							let a_lines = (z_code+'').split(/\\n/g);
+							let nl_lines = a_lines.length;
+							let a_output = [];
+
+							for(let i_line=0; i_line<nl_lines; i_line++) {
+								let s_line = a_lines[i_line];
+								let w_node = s_line;
+
+								// content
+								if(s_line.trim()) {
+									w_node = new __JMACS.sourcemap.SourceNode(
+										i_row,
+										i_col,
+										'meta',
+										s_line,
+										s_name,
+									);
 								}
 
-								// print
-								console.warn(\`undefined identifier: '\${s_identifier}'; automatically declaring as undefined\`);
+								// next line
+								i_row += 1;
 
-								// re-evaluate
-								return __safe_exec(new Function(\`
-									let \${s_identifier};
-									return (\${__f.toString()})();
-								\`), s_identifier);
+								// 0th column
+								i_col = 0;
+
+								// content
+								if(w_node) a_output.push(w_node);
+
+								// inter-newline
+								if(i_line < nl_lines-1) a_output.push('\\n');
 							}
-							else {
-								throw new Error(\`execution error in meta-script:\\n\${e_append.message}\\n\${e_append.stack}\`);
-								return '';
+
+							return a_output;
+						},
+
+						safe_exec: (__f, s_prev) => {
+							try {
+								return __f();
+							} catch(e_append) {
+								// allow reference errors
+								// doesn't work anymore? e_append instance ReferenceError
+								if(/^ReferenceError:/.test(e_append.stack)) {
+									let s_identifier = e_append.message.replace(/^(.+) is not defined$/, '$1');
+
+									// it is defined in global scope
+									if(s_identifier in global) {
+										// re-evaluate
+										return __JMACS.safe_exec(new Function(\`
+											let \${s_identifier} = global[\${JSON.stringify(s_identifier)}];
+											return (\${__f.toString()})();
+										\`), '*'+s_identifier);
+									}
+
+									// prevent infinite loop
+									if(s_identifier === s_prev) {
+										debugger;
+										throw new Error(\`cannot use identifier \${s_identifier}\`);
+									}
+
+									// print
+									console.warn(\`identifier was never declared: '\${s_identifier}'; automatically declaring as undefined\`);
+
+									// re-evaluate
+									return __JMACS.safe_exec(new Function(\`
+										let \${s_identifier};
+										return (\${__f.toString()})();
+									\`), s_identifier);
+								}
+								else {
+									throw new Error(\`execution error in meta-script:\\n\${e_append.message}\\n\${e_append.stack}\`);
+									return '';
+								}
 							}
-						}
+						},
 					};
 
-					${s_output}
-					__JMACS_OUTPUT;
+					${g_codified.meta}
+					return (() => {
+						let ysn_output = (new __JMACS.sourcemap.SourceNode(null, null, null, __JMACS_OUTPUT))
+							.toStringWithSourceMap();
+
+						return {
+							code: ysn_output.code,
+							map: ysn_output.map.toString(),
+						};
+					})();
 				`;
 
 				let z_result;
@@ -256,7 +544,11 @@ module.exports = (a_sections) => {
 					throw new Error(`there is a syntax error in the meta-script:\n${e_run.message} \n${e_run.stack}`);
 				}
 
-				return z_result;
+				return {
+					code: z_result.code,
+
+					consumer: () => new sourcemap.SourceMapConsumer(z_result.map),
+				};
 			},
 		};
 	};

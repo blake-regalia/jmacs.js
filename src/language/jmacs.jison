@@ -29,8 +29,8 @@ section
 	;
 
 body_section
-	: VERBATIM -> Verbatim($VERBATIM)
-	| ESCAPED_AT -> Verbatim('@')
+	: VERBATIM -> {type:$VERBATIM.trim()?'verbatim':'whitespace', text:$VERBATIM, loc:@1}
+	| ESCAPED_AT -> {type:'verbatim', text:'@', loc:@1}
 	| inline
 	| suppressed
 	| suppressed_line
@@ -41,15 +41,15 @@ body_section
 	;
 
 import
-	: '@import' js -> Import($js)
+	: '@import' js -> {type:'import', target:$js}
 	;
 
 if
-	: '@if' js body_section* elseif* else? '@end' -> If($js, $3, $4, $5)
+	: '@if' js body_section* elseif* else? '@end' -> {type:'if', if:$js, then:$3, elseifs:$4, else:$5}
 	;
 
 elseif
-	: '@else-if' js body_section* -> Elseif($js, $3)
+	: '@else-if' js body_section* -> {type:'else-if', if:$js, then:$3}
 	;
 
 else
@@ -57,35 +57,35 @@ else
 	;
 
 global
-	: '@global' js -> Global($js)
+	: '@global' js -> {type:'global', def:$js}
 	;
 
 inline
-	: '@{' js '}' -> Inline($js)
+	: '@{' js '}' -> {type:'inline', expr:$js}
 	;
 
 suppressed
-	: '@.{' js '}' -> Inline($js, true)
+	: '@.{' js '}' -> {type:'meta', meta:$js, line:false}
 	;
 
 suppressed_line
-	: '@.' js -> Inline($js, true)
+	: '@.' js -> {type:'meta', meta:$js, line:true}
 	;
 
 def
-	: '@def' js body_section* '@end' -> Macro($js, $3)
+	: '@def' js body_section* '@end' -> {type:'macro', head:$js, body:$3}
 	;
 
 def_cram
-	: '@def-cram' js body_section* '@end' -> Macro($js, $3, true)
+	: '@def-cram' js body_section* '@end' -> {type:'macro', head:$js, body:$3, cram:true}
 	;
 
 generator
-	: '@*{' js '}' -> Generator($js)
+	: '@*{' js '}' -> {type:'generator', expr:$js}
 	;
 
 js
-	: jm -> $jm.join('')
+	: jm -> {code:$jm.join(''), loc: @1}
 	;
 
 jm

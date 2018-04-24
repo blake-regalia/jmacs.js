@@ -8,12 +8,10 @@ const main = module.exports = {
 	load(p_file, s_prepend='') {
 		let s_input = fs.readFileSync(p_file, 'utf8');
 
-		let g_result = compiler({
+		return compiler({
 			input: s_prepend+s_input,
 			cwd: path.dirname(path.resolve(p_file)),
 		});
-
-		return g_result;
 	},
 
 	compile(h_compile) {
@@ -43,13 +41,13 @@ if(module === require.main) {
 	}
 
 	let g_result = main.load(p_input, s_prepend);
-	let s_output;
+	let g_output;
 	try {
-		s_output = g_result.run();
+		g_output = g_result.run();
 	}
 	catch(e_run) {
 		throw new Error(`execution error in meta-script:\n${e_run.message}\n${e_run.stack}`);
 	}
 
-	process.stdout.write(s_output);
+	process.stdout.write(g_output.code);
 }

@@ -1,0 +1,22 @@
+{
+  "name": "eslint-plugin-jmacs",
+  "version": "0.0.1",
+  "description": "Preprocessor for jmacs",
+  "author": "Blake Regalia <blake.regalia@gmail.com> (http://blake-regalia.com)",
+  "repository": "blake-regalia/jmacs.js",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha tests --recursive"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^4.18.1",
+    "mocha": "^3.1.2"
+  },
+  "license": "ISC"
+}
