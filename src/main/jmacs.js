@@ -9,6 +9,7 @@ const main = module.exports = {
 		let s_input = fs.readFileSync(p_file, 'utf8');
 
 		let p_file_resolved = path.resolve(p_file);
+
 		return compiler({
 			input: s_prepend+s_input,
 			cwd: path.dirname(p_file_resolved),
@@ -32,7 +33,7 @@ if(module === require.main) {
 		h_cli.help();
 	}
 
-	let p_input = path.join(process.cwd(), h_cli.args[0]);
+	let p_input = path.resolve(process.cwd(), h_cli.args[0]);
 
 	let s_prepend = '';
 	if(h_cli.config) {

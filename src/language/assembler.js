@@ -2,8 +2,8 @@ const path = require('path');
 const vm = require('vm');
 const sourcemap = require('source-map');
 
-const T_EVAL_TIMEOUT = 8000;  // 8 seconds
-// const T_EVAL_TIMEOUT = 8000*8; // 64 seconds
+// const T_EVAL_TIMEOUT = 8000;  // 8 seconds
+const T_EVAL_TIMEOUT = Infinity; // 64 seconds
 
 const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)((?:[|^%*/+-]|<<|>>>?)?=)(.+?);?$/;
 const R_IDENTIFIER_SAFE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
@@ -23,7 +23,7 @@ const h_codify = {
 	import({target:g_target}) {
 		let s_file = eval(g_target.code);
 		let s_cwd = process.cwd();
-		let p_file = path.join(this.state.cwd, s_file);
+		let p_file = path.resolve(this.state.cwd, s_file);
 		const jmacs = require('../main/jmacs.js');
 
 		let g_result = jmacs.load(p_file);
@@ -36,7 +36,7 @@ const h_codify = {
 			g_output = g_result.run();
 		}
 		catch(e_run) {
-			throw new Error(`cannot import '${p_file}' because it has a syntax error`);
+			throw new Error(`cannot import '${p_file}' because it has a syntax error: ${e_run.message}\n${e_run.stack}`);
 			// return {
 			// 	lint: [],
 			// 	meta: '',
@@ -134,7 +134,7 @@ const h_codify = {
 				...g_codified.lint,
 				'}\n',
 			],
-			meta: /* syntax: js */ `function ${g_head.code} {
+			meta: /* syntax: js */ `global['${s_name}'] = function ${g_head.code} {
 				const __JMACS_OUTPUT = [];
 				${g_codified.meta}
 				return new __JMACS.output(__JMACS_OUTPUT);
@@ -284,7 +284,7 @@ const h_codify = {
 				'})();\n',
 			],
 			meta: /* syntax: js */ `
-				debugger;
+				// debugger;
 				__JMACS_OUTPUT.push(...(function*() {
 					${g_expr.code}
 				})());`,
@@ -372,10 +372,6 @@ class evaluator {
 			filename: this.state.path,
 		});
 
-		// // set global
-		// this.context.__global = this.context;
-		// this.context.global = global;
-
 		let h_context = {};
 		for(let _key of Reflect.ownKeys(global)) {
 			Reflect.defineProperty(h_context, _key,
@@ -441,12 +437,15 @@ module.exports = (a_sections) => {
 
 						output: class {
 							constructor(a_output) {
+								this[__JMACS.is_output] = true;
 								this.output = a_output;
 							}
 						},
 
+						is_output: '**IS_JMACS_OUTPUT**',
+
 						srcmap: (z_code, g_loc, s_name=null) => {
-							if(z_code instanceof __JMACS.output) {
+							if(z_code && z_code[__JMACS.is_output]) {
 								return z_code.output;
 							}
 
@@ -522,8 +521,8 @@ module.exports = (a_sections) => {
 									\`), s_identifier);
 								}
 								else {
+									debugger;
 									throw new Error(\`execution error in meta-script:\\n\${e_append.message}\\n\${e_append.stack}\`);
-									return '';
 								}
 							}
 						},
@@ -540,7 +539,7 @@ debugger;
 						};
 					})();
 				`;
-debugger;
+// debugger;
 				let z_result;
 				try {
 					z_result = k_evaluator.run(s_eval);
