@@ -81,7 +81,7 @@ const h_codify = {
 								}
 							}
 							else {
-								g_node.text = g_node.text.replace(r_pre_nl, '');
+								g_node.text = g_node.text.replace(r_pre_nl, '\n');
 								g_node.loc.first_column += nl_pre;
 								g_node.loc.last_column += nl_pre;
 							}
