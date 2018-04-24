@@ -130,7 +130,7 @@ const h_codify = {
 				...g_codified.lint,
 				'}\n',
 			],
-			meta: /* syntax: js */ `global['${s_name}'] = function ${g_head.code} {
+			meta: /* syntax: js */ `const ${s_name} = global['${s_name}'] = function ${g_head.code} {
 				const __JMACS_OUTPUT = [];
 				${g_codified.meta}
 				return new __JMACS.output(__JMACS_OUTPUT);
@@ -281,10 +281,23 @@ const h_codify = {
 				'})();\n',
 			],
 			meta: /* syntax: js */ `
-				// debugger;
-				__JMACS_OUTPUT.push(...(function*() {
-					${g_expr.code}
-				})());`,
+				__JMACS_OUTPUT.push(
+					...(
+						[...(function*() {
+							${g_expr.code}
+						})()]
+							.reduce((a_nodes, w_node) => {
+								a_nodes.push(
+									...__JMACS.srcmap(
+										w_node,
+										${JSON.stringify(g_expr.loc)},
+										'generator'
+									)
+								);
+								return a_nodes;
+							}, [])
+					)
+				);`,
 		};
 	},
 };
