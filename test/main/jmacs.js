@@ -11,6 +11,7 @@ const jmacs = require('../../build/main/jmacs.js');
 function compile(s_input, p_cwd='./') {
 	let g_result = jmacs.compile({
 		input: s_input,
+		path: './test.js.jmacs',
 		cwd: p_cwd,
 	});
 

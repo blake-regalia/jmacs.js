@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>Indent</string>
+	<key>scope</key>
+	<string>source.es</string>
+	<key>settings</key>
+	<dict>
+		<key>bracketIndentNextLinePattern</key>
+		<string>(?x)
+  \b(
+    ( do | else ) \s* |
+    ( if | while | for ) \b .* \( .* \) [^;]*
+  )$</string>
+		<key>decreaseIndentPattern</key>
+		<string>(?x)
+  (
+    ^ (
+      # consume double-quoted string or single-quoted string
+      "(?:[^"\\]|\\.)*" | '(?:[^'\\]|\\.)*'
+      # or any char that doesn't start string, comment or opening indentation char on line
+      | [^"'`/\{\(\[\n]
+    )* 
+    # followed by any one of the indentation chars
+    (
+      \} [^\{]* |
+      \) [^\(]* |
+      \] [^\[]*
+    )
+  )$</string>
+		<key>increaseIndentPattern</key>
+		<string>(?x)
+  ^.* (
+    # braces
+    \{ (
+      # consume double-quoted string or single-quoted string
+      (?&lt;string&gt;"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')
+      # or any char that doesn't start string, comment or ending brace
+      | [^"'`/\}]
+    )*
+    # parens
+    | \( (
+      # consume double-quoted string or single-quoted string
+      \k&lt;string&gt;
+      # or any char that doesn't start string, comment or ending brace
+      | [^"'`/\)]
+    )*
+    # brackets
+    | \[ (
+      # consume double-quoted string or single-quoted string
+      \k&lt;string&gt;
+      # or any char that doesn't start string, comment or ending brace
+      | [^"'`/\]]
+    )*
+  )
+  # stop matching at EOL or comment
+  ($|/[/*])</string>
+		<key>shellVariables</key>
+		<array>
+			<dict>
+				<key>name</key>
+				<string>TM_COMMENT_START</string>
+				<key>value</key>
+				<string>// </string>
+			</dict>
+			<dict>
+				<key>name</key>
+				<string>TM_COMMENT_START_2</string>
+				<key>value</key>
+				<string>/*</string>
+			</dict>
+			<dict>
+				<key>name</key>
+				<string>TM_COMMENT_END_2</string>
+				<key>value</key>
+				<string>*/</string>
+			</dict>
+		</array>
+	</dict>
+	<key>uuid</key>
+	<string>54754702-a030-4b65-af1b-45759e122b28</string>
+</dict>
+</plist>

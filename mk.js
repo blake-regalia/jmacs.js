@@ -8,7 +8,7 @@ let pd_build = 'build';
 let pd_build_main = `${pd_build}/main`;
 let pd_build_language = `${pd_build}/language`;
 let pd_build_syntax = `${pd_build}/syntax`;
-let pd_build_eslint = `dist/eslint-plugin`;
+let pd_dist_eslint = `dist/eslint-plugin`;
 
 const rule_copy = (s_dir, s_file=':file.js') => ({
 	// copy rule
@@ -35,7 +35,7 @@ module.exports = {
 		...[
 			'package.json',
 			'index.js',
-		].map(s => `${pd_build_eslint}/${s}`),
+		].map(s => `${pd_dist_eslint}/${s}`),
 	],
 
 	syntax: [
@@ -52,7 +52,7 @@ module.exports = {
 			npm publish
 
 			# publish eslint-plugin-jmacs
-			cd ${pd_build_eslint}
+			cd ${pd_dist_eslint}
 			npm publish
 		`,
 	},
@@ -65,7 +65,7 @@ module.exports = {
 		`,
 	},
 
-	[`${pd_build_eslint}/package.json`]: {
+	[`${pd_dist_eslint}/package.json`]: {
 		deps: [
 			'src/eslint-plugin/package.json',
 			'./package.json',
@@ -88,7 +88,7 @@ module.exports = {
 	...rule_copy('syntax', 'excelsior.tmTheme'),
 	...rule_copy('syntax', 'jmacs.sublime-syntax'),
 
-	[`${pd_build_eslint}/index.js`]: {
+	[`${pd_dist_eslint}/index.js`]: {
 		deps: [
 			'src/eslint-plugin/index.js',
 			s_dep_self_dir,

@@ -2,8 +2,7 @@ const path = require('path');
 const vm = require('vm');
 const sourcemap = require('source-map');
 
-// const T_EVAL_TIMEOUT = 8000;  // 8 seconds
-const T_EVAL_TIMEOUT = Infinity; // 64 seconds
+const T_EVAL_TIMEOUT = 30000;  // 30 seconds
 
 const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)((?:[|^%*/+-]|<<|>>>?)?=)(.+?);?$/;
 const R_IDENTIFIER_SAFE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
@@ -363,6 +362,7 @@ class evaluator {
 	}
 
 	run(s_code) {
+		debugger;
 		let h_module = {exports:{}};
 		let h_nodejs_env = {
 			__dirname: this.state.cwd,
