@@ -31,6 +31,18 @@ module.exports = {
 		// 'syntax',
 	],
 
+	link: {
+		run: /* syntax: bash */ `
+			pushd ${pd_build_main}
+				npm link
+			popd
+			pushd ${pd_dist_eslint}
+				npm link jmacs
+				npm link
+			popd
+		`,
+	},
+
 	eslint: [
 		...[
 			'package.json',
