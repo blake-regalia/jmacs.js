@@ -783,6 +783,7 @@ contexts:
       captures:
         1: invalid.deprecated.es
       set: forStatement_AFTER_EACH
+    - include: macro_in
     - include: other_illegal_pop
 
   forStatement_AFTER_EACH:
@@ -791,6 +792,7 @@ contexts:
         1: punctuation.definition.expression.loop.begin.es
         2: meta.brace.round.js # ^BS
       set: forStatement_AFTER_PAREN_OPEN
+    - include: macro_in
     - include: other_illegal_pop
 
   forStatement_AFTER_PAREN_OPEN:
@@ -821,6 +823,8 @@ contexts:
     # practice, we now stand a tiny chance of breaking highlighting. To make it
     # work, we need a whole duplicative version of the expression ‘tree’ that
     # exists only to disallow the ‘in’ operator.
+    - match: '(var|let|const)\s*{{macro_in_ahead}}'
+      set: [forStatement_IN_OR_OF_AFTER_BINDING, macro_in_pop]
     - match: 'var{{idEnd}}'
       scope: storage.type.variable.var.es
       set: forStatement_IN_OR_OF_DECLARATION_AFTER_WORD
@@ -830,6 +834,8 @@ contexts:
     - match: 'const{{idEnd}}'
       scope: storage.type.constant.es
       set: forStatement_IN_OR_OF_DECLARATION_AFTER_WORD
+    - match: '{{macro_in_ahead}}'
+      set: [forStatement_AFTER_FINAL_EXP, macro_in_pop]
     - match: '{{PLA_anything}}'
       set: [ forStatement_IN_OR_OF_AFTER_BINDING, assignmentExpression_NO_IN ] # (lhse)
 

@@ -27,9 +27,9 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 <jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>"("							this.begin('jm_nest_paren'); return 'JM';
 <jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>"["							this.begin('jm_nest_bracket'); return 'JM';
 
-<jm_nest_brace>"}"					this.popState(); return 'JM';
-<jm_nest_paren>")"					this.popState(); return 'JM';
-<jm_nest_bracket>"]"					this.popState(); return 'JM';
+<jm_nest_brace>"}"				this.popState(); return 'JM';
+<jm_nest_paren>")"				this.popState(); return 'JM';
+<jm_nest_bracket>"]"			this.popState(); return 'JM';
 
 <jm_template>[\\].				return 'JM';
 <jm_template>[$][{]				this.begin('jm_nest_brace'); return 'JM';
@@ -49,20 +49,20 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 /*[@][#][^\n]*\n 	{ /* ignore line comments / } /**/
 /*[@]\s*[/][*][^]*[*][/] 	{ /* ignore block comments *       / }  /**/
 
-"@{"				this.begin('jm');   return '@{';
-"@.{"				this.begin('jm');   return '@.{';
-"@*{"				this.begin('jm');   return '@*{';
-[ \t]*"@."				this.begin('jm_line'); return '@.';
+"@{"							this.begin('jm');   return '@{';
+"@*{"							this.begin('jm');   return '@*{';
+[ \t]*"@.{"						this.begin('jm');   return '@.{';
+[ \t]*"@."						this.begin('jm_line'); return '@.';
 [ \t]*"@$"[ \t]?				this.begin('jm_line'); return '@global';
 [ \t]*"@global"[ \t]?			this.begin('jm_line'); return '@global';
 [ \t]*"@-"[ \t]?				this.begin('jm_line'); return '@if';
 [ \t]*"@if"[ \t]?				this.begin('jm_line'); return '@if';
 [ \t]*"@+"[ \t]?				this.begin('jm_line'); return '@else-if';
 [ \t]*"@else-if"[ \t]?			this.begin('jm_line'); return '@else-if';
-[ \t]*"@:"				return '@else';
-[ \t]*"@else"				return '@else';
-[ \t]*"@;"				this.begin('jm_line'); return '@end';
-[ \t]*"@end"				this.begin('jm_line'); return '@end';
+[ \t]*"@:"						return '@else';
+[ \t]*"@else"					return '@else';
+[ \t]*"@;"						this.begin('jm_line'); return '@end';
+[ \t]*"@end"					this.begin('jm_line'); return '@end';
 [ \t]*"@>"[ \t]?				this.begin('jm_line'); return '@def';
 [ \t]*"@def"[ \t]?	 			this.begin('jm_line'); return '@def';
 [ \t]*"@>>"[ \t]?				this.begin('jm_line'); return '@def-cram';

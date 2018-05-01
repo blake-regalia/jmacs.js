@@ -43,6 +43,17 @@ module.exports = {
 		`,
 	},
 
+	publish: {
+		run: /* syntax: bash */ `
+			pushd ${pd_build_main}
+				npm publish
+			popd
+			pushd ${pd_dist_eslint}
+				npm publish
+			popd
+		`,
+	},
+
 	eslint: [
 		...[
 			'package.json',

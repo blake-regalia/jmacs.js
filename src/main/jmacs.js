@@ -26,6 +26,7 @@ if(module === require.main) {
 	let h_cli = require('commander')
 		.version(require('../../package.json').version, '-v, --version')
 		.option('-g, --config <js>', 'pass a JSON-like JavaScript object to insert global vars at the top')
+		.option('-m, --meta', 'return the meta script instead of the output code')
 		.arguments('<file>')
 		.parse(process.argv);
 
@@ -44,13 +45,19 @@ if(module === require.main) {
 	}
 
 	let g_result = main.load(p_input, s_prepend);
-	let g_output;
-	try {
-		g_output = g_result.run();
-	}
-	catch(e_run) {
-		throw new Error(`execution error in meta-script:\n${e_run.message}\n${e_run.stack}`);
-	}
 
-	process.stdout.write(g_output.code);
+	if(h_cli.meta) {
+		process.stdout.write(g_result.meta.code);
+	}
+	else {
+		let g_output;
+		try {
+			g_output = g_result.run();
+		}
+		catch(e_run) {
+			throw new Error(`execution error in meta-script:\n${e_run.message}\n${e_run.stack}`);
+		}
+
+		process.stdout.write(g_output.code);
+	}
 }

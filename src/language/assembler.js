@@ -172,13 +172,16 @@ const h_codify = {
 		`,
 	}),
 
-	meta: ({meta:g_meta, line:b_line}) => ({
-		lint: [
-			srcmap(g_meta.code, g_meta.loc, b_line? 'line': 'block'),
-			'\n',
-		],
-		meta: g_meta.code,
-	}),
+	meta: ({meta:g_meta, line:b_line}) => {
+		debugger;
+		return ({
+			lint: [
+				srcmap(g_meta.code, g_meta.loc, b_line? 'line': 'block'),
+				'\n',
+			],
+			meta: g_meta.code,
+		})
+	},
 
 	if(g) {
 		let gc_then = this.codify(g.then);
