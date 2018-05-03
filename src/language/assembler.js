@@ -19,7 +19,7 @@ const srcmap = (z_code, g_loc, s_name=null) => {
 };
 
 const h_codify = {
-	import({target:g_target}) {
+	import({target:g_target}, g_extras) {
 		let s_file = eval(g_target.code);
 		let s_cwd = process.cwd();
 		let p_file = path.resolve(this.state.cwd, s_file);
@@ -44,13 +44,11 @@ const h_codify = {
 		};
 	},
 
-	macro({head:g_head, body:a_body, cram:b_cram}) {
-		if(b_cram) {
-			for(let g_node of a_body) {
-				if(g_node.text) g_node.text = g_node.text.replace(/\s/g, '');
-			}
-		}
-		else {
+	macro({head:g_head, body:a_body, cram:b_cram}, g_extras) {
+		// normalize cram
+		b_cram = b_cram || g_extras.cram;
+
+		if(!b_cram) {
 			// gobble indent
 			let nl_body = a_body.length;
 			for(let i_text=0; i_text<nl_body-1; i_text++) {
@@ -115,7 +113,8 @@ const h_codify = {
 			}
 		}
 
-		let g_codified = this.codify(a_body);
+		// codify children
+		let g_codified = this.codify(a_body, Object.assign({}, g_extras, {cram:b_cram}));
 
 		// export function name
 		let s_name = g_head.code.replace(/^\s*([^\s\n*(]+)[^]*$/, '$1');
@@ -137,26 +136,26 @@ const h_codify = {
 		};
 	},
 
-	verbatim: ({text:s_text, loc:g_loc}) => ({
+	verbatim: ({text:s_text, loc:g_loc}, g_extras) => ({
 		lint: [],
 		meta: /* syntax: js */ `
 			__JMACS_OUTPUT.push(
 				...__JMACS.srcmap(
-					${JSON.stringify(s_text)},
+					${JSON.stringify(g_extras.cram? s_text.replace(/\s+/g, ''): s_text)},
 					${JSON.stringify(g_loc)},
 					'verbatim',
 				));
 		`,
 	}),
 
-	whitespace: ({text:s_ws}) => ({
+	whitespace: ({text:s_ws}, g_extras) => ({
 		lint: [],
-		meta: /* syntax: js */ `
+		meta: g_extras.cram? '': /* syntax: js */ `
 			__JMACS_OUTPUT.push(${JSON.stringify(s_ws)});
 		`,
 	}),
 
-	inline: ({expr:g_expr}) => ({
+	inline: ({expr:g_expr}, {cram:b_cram}) => ({
 		lint: [
 			'(() => (',
 			srcmap(g_expr.code, g_expr.loc),
@@ -165,15 +164,16 @@ const h_codify = {
 		meta: /* syntax: js */ `
 			__JMACS_OUTPUT.push(
 				...__JMACS.srcmap(
-					__JMACS.safe_exec(() => (${g_expr.code})),
+					${b_cram? `__JMACS.cram(`: ''}
+						__JMACS.safe_exec(() => (${g_expr.code}))
+					${b_cram? `)`: ''},
 					${JSON.stringify(g_expr.loc)},
 					'inline',
 				));
 		`,
 	}),
 
-	meta: ({meta:g_meta, line:b_line}) => {
-		debugger;
+	meta: ({meta:g_meta, line:b_line}, g_extras) => {
 		return ({
 			lint: [
 				srcmap(g_meta.code, g_meta.loc, b_line? 'line': 'block'),
@@ -183,8 +183,8 @@ const h_codify = {
 		})
 	},
 
-	if(g) {
-		let gc_then = this.codify(g.then);
+	if(g, g_extras) {
+		let gc_then = this.codify(g.then, g_extras);
 
 		let a_lint = [
 			'if(',
@@ -200,7 +200,7 @@ const h_codify = {
 			}`;
 
 		for(let g_elseif of g.elseifs) {
-			let gc_elseif_then = this.codify(g_elseif.then);
+			let gc_elseif_then = this.codify(g_elseif.then, g_extras);
 
 			a_lint.push(...[
 				'else if(',
@@ -217,7 +217,7 @@ const h_codify = {
 		}
 
 		if(g.else) {
-			let gc_else_then = this.codify(g.else);
+			let gc_else_then = this.codify(g.else, g_extras);
 
 			a_lint.push(...[
 				'else {\n',
@@ -237,7 +237,7 @@ const h_codify = {
 		};
 	},
 
-	global({def:g_def}) {
+	global({def:g_def}, g_extras) {
 		let m_global = R_GLOBAL.exec(g_def.code);
 		if(!m_global) throw new Error(`invalid global assignment ${g_def.code}`);
 		let [, s_var, s_ws, s_oper, s_value] = m_global;
@@ -312,7 +312,7 @@ class evaluator {
 		});
 	}
 
-	codify(z_syntax) {
+	codify(z_syntax, g_extras={}) {
 		if(Array.isArray(z_syntax)) {
 			let a_codified = [];
 			let g_prev = null;
@@ -321,7 +321,7 @@ class evaluator {
 			for(let g_node of z_syntax) {
 				if(b_nws) {
 					// codify non-whitespace
-					a_codified.push(this.codify(g_node));
+					a_codified.push(this.codify(g_node, g_extras));
 				}
 				else if('whitespace' === g_node.type) {
 					g_prev = g_node;
@@ -331,11 +331,11 @@ class evaluator {
 					if(g_prev) {
 						a_codified.push(this.codify(Object.assign(g_prev, {
 							text: g_prev.text.replace(/^[^]*?([^\n]*)$/, '$1'),
-						})));
+						}), g_extras));
 					}
 
 					// codify non-whitespace
-					a_codified.push(this.codify(g_node));
+					a_codified.push(this.codify(g_node, g_extras));
 
 					//
 					b_nws = true;
@@ -360,7 +360,7 @@ class evaluator {
 			if(!f_codifier) {
 				throw new Error(`codifier not exist: ${z_syntax.type}`);
 			}
-			return f_codifier.apply(this, [z_syntax]);
+			return f_codifier.apply(this, [z_syntax, g_extras]);
 		}
 	}
 
@@ -555,6 +555,10 @@ module.exports = (a_sections) => {
 									throw new Error(\`execution error in meta-script:\\n\${e_append.message}\\n\${e_append.stack}\`);
 								}
 							}
+						},
+
+						cram: (z_code) => {
+							return (z_code+'').replace(/\s+/g, '');
 						},
 					};
 debugger;
