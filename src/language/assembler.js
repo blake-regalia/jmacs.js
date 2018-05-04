@@ -2,7 +2,9 @@ const path = require('path');
 const vm = require('vm');
 const sourcemap = require('source-map');
 
-const T_EVAL_TIMEOUT = 30000;  // 30 seconds
+const T_EVAL_TIMEOUT = process.execArgv.filter(s => s.includes('--inspect'))
+	? Number.MAX_SAFE_INTEGER
+	: 30000;  // 30 seconds
 
 const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)((?:[|^%*/+-]|<<|>>>?)?=)([^]+?);?$/;
 const R_IDENTIFIER_SAFE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
@@ -557,7 +559,7 @@ module.exports = (a_sections) => {
 						},
 
 						cram: (z_code) => {
-							return (z_code+'').replace(/\s+/g, '');
+							return (z_code+'').replace(/\\s+/g, '');
 						},
 					};
 debugger;
