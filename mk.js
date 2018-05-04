@@ -105,6 +105,7 @@ module.exports = {
 				})
 				&& json`.replace(/[\n\t]/g, '')
 			+ /* syntax: bash */ `" > $@
+			npx sort-package-json $@
 		`,
 	},
 

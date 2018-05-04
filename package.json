@@ -2,19 +2,19 @@
   "name": "jmacs",
   "version": "1.0.8",
   "description": "Simple Javascript Macros",
-  "author": "Blake Regalia <blake.regalia@gmail.com> (http://blake-regalia.com)",
+  "keywords": [
+    "macro"
+  ],
   "license": "ISC",
-  "repository": "blake-regalia/jmacs.js",
+  "author": "Blake Regalia <blake.regalia@gmail.com> (http://blake-regalia.com)",
   "files": [
     "build"
   ],
   "main": "build/main/jmacs.js",
-  "keywords": [
-    "macro"
-  ],
   "bin": {
     "jmacs": "build/main/jmacs.js"
   },
+  "repository": "blake-regalia/jmacs.js",
   "scripts": {
     "test": "mk && mocha test/main/jmacs.js"
   },
@@ -25,7 +25,8 @@
   "devDependencies": {
     "eslint": "^4.19.1",
     "jison": "^0.4.18",
-    "mkjs-cli": "0.0.9",
-    "mocha": "^5.1.1"
+    "mkjs-cli": "^0.1.0",
+    "mocha": "^5.1.1",
+    "sort-package-json": "^1.13.0"
   }
 }

@@ -1,6 +1,5 @@
 {
   "name": "eslint-plugin-jmacs",
-  "version": "0.0.1",
   "description": "Preprocessor for jmacs",
   "author": "Blake Regalia <blake.regalia@gmail.com> (http://blake-regalia.com)",
   "repository": "blake-regalia/jmacs.js",
