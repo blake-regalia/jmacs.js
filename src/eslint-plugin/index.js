@@ -7,6 +7,7 @@ const AS_MSGS_IGNORE_META = new Set([
 	'block-spacing',
 	'function-paren-newline',
 	'func-style',
+	'func-call-spacing',
 	'no-multi-spaces',
 	'no-tabs',
 	'indent',
@@ -20,6 +21,7 @@ module.exports = {
 				let g_result = jmacs.compile({
 					input: s_text,
 					cwd: path.dirname(p_file),
+					path: p_file,
 				});
 
 				hm_sourcemaps.set(p_file, g_result);

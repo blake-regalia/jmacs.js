@@ -8,8 +8,11 @@ alphanum_u		[A-Za-z_0-9]
 word 			{alphanum_u}+
 name 			[A-Za-z_]{alphanum_u}*
 
+line_comment 			[/]\/.*?\n
+block_comment			[/]\*[^]*?\*\/
 single_quoted_string 	['](?:[^'\\]|\\.)*[']
 double_quoted_string 	["](?:[^"\\]|\\.)*["]
+regular_expression 		[/](?:[^/[\\]|\\.|\[(?:[^\]\\]|\\.)*])+\/
 
 %x jm jm_nest_brace jm_nest_paren jm_nest_bracket jm_line jm_template
 
@@ -20,8 +23,11 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 /* lexical vocabulary */
 /* ------------------------ */
 
+<jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>{line_comment}		 		return 'JM';
+<jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>{block_comment} 			return 'JM';
 <jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>{single_quoted_string} 		return 'JM';
 <jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>{double_quoted_string} 		return 'JM';
+<jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>{regular_expression} 		return 'JM';
 <jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>"`" 						this.begin('jm_template'); return 'JM';
 <jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>"{"							this.begin('jm_nest_brace'); return 'JM';
 <jm,jm_nest_brace,jm_nest_paren,jm_nest_bracket,jm_line>"("							this.begin('jm_nest_paren'); return 'JM';
@@ -32,7 +38,7 @@ double_quoted_string 	["](?:[^"\\]|\\.)*["]
 <jm_nest_bracket>"]"			this.popState(); return 'JM';
 
 <jm_template>[\\].				return 'JM';
-<jm_template>[$][{]				this.begin('jm_nest_brace'); return 'JM';
+<jm_template>"${"				this.begin('jm_nest_brace'); return 'JM';
 <jm_template>"`"				this.popState(); return 'JM';
 
 <jm>"}"							this.popState(); return '}';

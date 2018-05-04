@@ -4,7 +4,7 @@ const sourcemap = require('source-map');
 
 const T_EVAL_TIMEOUT = 30000;  // 30 seconds
 
-const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)((?:[|^%*/+-]|<<|>>>?)?=)(.+?);?$/;
+const R_GLOBAL = /^\s*([A-Za-z_$][A-Za-z0-9_$]*)(\s*)((?:[|^%*/+-]|<<|>>>?)?=)([^]+?);?$/;
 const R_IDENTIFIER_SAFE = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 
 const srcmap = (z_code, g_loc, s_name=null) => {
@@ -276,6 +276,7 @@ const h_codify = {
 	},
 
 	generator({expr:g_expr}) {
+		debugger;
 		return {
 			lint: [
 				'(function*() {\n',
@@ -365,7 +366,6 @@ class evaluator {
 	}
 
 	run(s_code) {
-		debugger;
 		let h_module = {exports:{}};
 		let h_nodejs_env = {
 			__dirname: this.state.cwd,

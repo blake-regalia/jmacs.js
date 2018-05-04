@@ -551,6 +551,11 @@ contexts:
         1: support.class.jmacs meta.macro.js.set.jmacs.es
         2: meta.whitespace.es meta.macro.js.set.jmacs.es
       set: [literalObject_OPEN]
+    - match: '(class){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: [classDeclaration_AFTER_BRACE]
     - match: '(arguments){{macro_syntax_eol}}'
       captures:
         1: support.class.jmacs meta.macro.js.set.jmacs.es
