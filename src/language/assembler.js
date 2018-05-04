@@ -276,7 +276,6 @@ const h_codify = {
 	},
 
 	generator({expr:g_expr}) {
-		debugger;
 		return {
 			lint: [
 				'(function*() {\n',
