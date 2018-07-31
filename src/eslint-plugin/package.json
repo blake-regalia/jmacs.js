@@ -8,7 +8,7 @@
     "eslintplugin",
     "eslint-plugin"
   ],
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "test": "mocha tests --recursive"
   },
