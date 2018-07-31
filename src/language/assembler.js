@@ -20,68 +20,6 @@ const srcmap = (z_code, g_loc, s_name=null) => {
 	));
 };
 
-const stringify = (z_code) => {
-	switch(typeof z_code) {
-		case 'string':
-		case 'number':
-		case 'boolean':
-			return z_code+'';
-
-		case 'function': {
-			return z_code.toString();
-		}
-
-		case 'object': {
-			if(Array.isArray(z_code)) return `[${z_code.map(z => stringify(z)).join(', ')}]`;
-
-			if(z_code instanceof RegExp) return z_code.toString();
-
-			switch(z_code.toString()) {
-				case '[object Map]': {
-					let hm_code = z_code;
-					let a_items = [];
-					for(let [zi_key, z_item] of hm_code) {
-						a_items.push(`[${stringify(zi_key)}, ${stringify(z_item)}]`);
-					}
-					return /* syntax: js */ `new Map([${a_items.join(', ')}])`;
-				}
-
-				case '[object Set]': {
-					let as_code = z_code;
-					let a_items = [];
-					for(let z_item of as_code) {
-						a_items.push(stringify(z_item));
-					}
-					return /* syntax: js */ `new Set([${a_items.join(', ')}])`;
-				}
-
-				case '[object Object]': {
-					let h_object = z_code;
-					let s_object = '{';
-					for(let s_key in h_object) {
-						if(R_IDENTIFIER_SAFE.test(s_key)) s_object += s_key+':';
-						else s_object += `'${s_key.replace(/'/g, '\\\'')}':`;
-
-						s_object += stringify(z_code);
-					}
-
-					return s_object;
-				}
-			}
-		}
-	}
-
-	throw new Error(`not sure how to serialize object: ${z_code}`);
-
-	// return util.inspect(z_code, {
-	// 	depth: Infinity,
-	// 	customInspect: false,
-	// 	maxArrayLength: Infinity,
-	// 	breakLength: Infinity,
-
-	// });
-};
-
 const h_codify = {
 	import({target:g_target}, g_extras) {
 		let s_file = eval(g_target.code);
@@ -244,7 +182,7 @@ const h_codify = {
 				'\n',
 			],
 			meta: g_meta.code,
-		})
+		});
 	},
 
 	if(g, g_extras) {
@@ -518,6 +456,8 @@ module.exports = (a_sections) => {
 					const __JMACS_OUTPUT = [];
 
 					const __JMACS = {
+						R_IDENTIFIER_SAFE: ${R_IDENTIFIER_SAFE},
+
 						sourcemap: require('source-map'),
 
 						output: class {
@@ -537,6 +477,75 @@ module.exports = (a_sections) => {
 
 						is_output: '**IS_JMACS_OUTPUT**',
 
+						stringify(z_code) {
+							switch(typeof z_code) {
+								case 'string': return \`'\${z_code}'\`;
+
+								case 'number':
+								case 'boolean':
+									return z_code+'';
+
+								case 'function': {
+									return z_code.toString();
+								}
+
+								case 'object': {
+									if(Array.isArray(z_code)) return \`[\${z_code.map(z => __JMACS.stringify(z)).join(', ')}]\`;
+
+									if(z_code instanceof RegExp) return z_code.toString();
+
+									switch(z_code.toString()) {
+										case '[object Map]': {
+											let hm_code = z_code;
+											let a_items = [];
+											for(let [zi_key, z_item] of hm_code) {
+												a_items.push(\`[\${__JMACS.stringify(zi_key)}, \${__JMACS.stringify(z_item)}]\`);
+											}
+											return /* syntax: js */ \`new Map([\${a_items.join(', ')}])\`;
+										}
+
+										case '[object Set]': {
+											let as_code = z_code;
+											let a_items = [];
+											for(let z_item of as_code) {
+												a_items.push(__JMACS.stringify(z_item));
+											}
+											return /* syntax: js */ \`new Set([\${a_items.join(', ')}])\`;
+										}
+
+										case '[object Object]': {
+											let h_object = z_code;
+											let s_object = '{';
+											for(let s_key in h_object) {
+												if(__JMACS.R_IDENTIFIER_SAFE.test(s_key)) s_object += s_key+':';
+												else s_object += \`'\${s_key.replace(/'/g, '\\\\\\'')}':\`;
+
+												s_object += __JMACS.stringify(h_object[s_key])+', ';
+											}
+
+											return s_object+'}';
+										}
+
+										default: break;
+									}
+
+									break;
+								}
+
+								default: break;
+							}
+
+							throw new Error(\`not sure how to serialize object: \${z_code}\`);
+
+							// return util.inspect(z_code, {
+							// 	depth: Infinity,
+							// 	customInspect: false,
+							// 	maxArrayLength: Infinity,
+							// 	breakLength: Infinity,
+
+							// });
+						},
+
 						srcmap: (z_code, g_loc, s_name=null) => {
 							if(z_code && z_code[__JMACS.is_output]) {
 								return z_code.output;
@@ -545,7 +554,9 @@ module.exports = (a_sections) => {
 							let i_row = g_loc.first_line;
 							let i_col = g_loc.first_column;
 
-							let a_lines = stringify(z_code).split(/\\n/g);
+							let a_lines = 'string' === typeof z_code
+								? z_code.split(/\\n/g)
+								: __JMACS.stringify(z_code).split(/\\n/g);
 							let nl_lines = a_lines.length;
 							let a_output = [];
 
