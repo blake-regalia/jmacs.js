@@ -373,7 +373,17 @@ class evaluator {
 			__filename: this.state.path,
 			exports: h_module.exports,
 			module: h_module,
-			require: require,
+			require: (s_package) => {
+				// resolve to path
+				let p_require = require.resolve(s_package, {
+					paths: [
+						path.dirname(this.state.path),
+					],
+				});
+
+				// load module
+				return require(p_require);  // eslint-disable-line global-require
+			},
 		};
 
 		// prep script
