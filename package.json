@@ -16,7 +16,7 @@
   },
   "repository": "blake-regalia/jmacs.js",
   "scripts": {
-    "test": "mk && mocha test/main/jmacs.js"
+    "test": "emk && mocha test/main/jmacs.js"
   },
   "dependencies": {
     "commander": "^2.15.1",
