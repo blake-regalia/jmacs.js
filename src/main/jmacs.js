@@ -23,18 +23,24 @@ const main = module.exports = {
 };
 
 if(module === require.main) {
-	let h_cli = require('commander')
-		.version(require('../../package.json').version, '-v, --version')
-		.option('-g, --config <js>', 'pass a JSON-like JavaScript object to insert global vars at the top')
-		.option('-m, --meta', 'return the meta script instead of the output code')
-		.arguments('<file>')
+	let h_cli = require('yargs')
+		.usage('Usage: $0 [OPTIONS] FILE')
+		.string('g')
+			.alias('g', 'config')
+			.describe('g', 'pass a JSON-like JavaScript object to insert global vars at the top')
+		.boolean('m')
+			.alias('m', 'meta')
+			.describe('m', 'return the meta script instead of the output code')
+		.alias('h', 'help')
+		.alias('v', 'version')
+		.help()
 		.parse(process.argv);
 
-	if(!h_cli.args.length) {
+	if(!h_cli._.length) {
 		h_cli.help();
 	}
 
-	let p_input = path.resolve(process.cwd(), h_cli.args[0]);
+	let p_input = path.resolve(process.cwd(), h_cli._[0]);
 
 	let s_prepend = '';
 	if(h_cli.config) {

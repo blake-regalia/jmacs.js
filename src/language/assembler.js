@@ -43,6 +43,10 @@ const h_codify = {
 		return {
 			lint: [],
 			meta: g_result.meta.code,
+			deps: [
+				p_file,
+				...g_result.meta.deps
+			],
 		};
 	},
 
@@ -346,15 +350,18 @@ class evaluator {
 
 			let a_lint = [];
 			let a_meta = [];
+			let a_deps = [];
 
 			for(let g_node of a_codified) {
 				if(g_node.lint) a_lint.push(...g_node.lint);
 				a_meta.push(g_node.meta);
+				if(g_node.deps) a_deps.push(...g_node.deps);
 			}
 
 			return {
 				lint: a_lint,
 				meta: a_meta.join('\n'),
+				deps: [...new Set(a_deps)],
 			};
 		}
 		else {
@@ -444,6 +451,8 @@ module.exports = (a_sections) => {
 			exports: a_exports,
 
 			meta: {
+				deps: g_codified.deps,
+
 				code: g_codified.meta,
 
 				lint: ysn_meta.toString(),
