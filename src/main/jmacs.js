@@ -24,7 +24,12 @@ const main = module.exports = {
 
 if(module === require.main) {
 	let h_cli = require('yargs')
-		.usage('Usage: $0 [OPTIONS] FILE')
+		.usage('$0 [OPTIONS] <file>', 'convert a jmacs source to its output', (yargs) => {
+			yargs.positional('file', {
+				describe: 'jmacs source file',
+				type: 'string',
+			})
+		})
 		.string('g')
 			.alias('g', 'config')
 			.describe('g', 'pass a JSON-like JavaScript object to insert global vars at the top')
