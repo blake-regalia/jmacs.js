@@ -24,12 +24,7 @@ const main = module.exports = {
 
 if(module === require.main) {
 	let h_cli = require('yargs')
-		.usage('$0 [OPTIONS] <file>', 'convert a jmacs source to its output', (yargs) => {
-			yargs.positional('file', {
-				describe: 'jmacs source file',
-				type: 'string',
-			})
-		})
+		.usage('$0 [OPTIONS] FILE')
 		.string('g')
 			.alias('g', 'config')
 			.describe('g', 'pass a JSON-like JavaScript object to insert global vars at the top')
@@ -41,11 +36,15 @@ if(module === require.main) {
 		.help()
 		.parse(process.argv);
 
-	if(!h_cli._.length) {
-		h_cli.help();
+	let a_pargs = h_cli._.slice(2);
+
+	if(!a_pargs.length) {
+		console.error(`ERROR: expected at least one file arugment; received 0\n`);
+		require('yargs').showHelp();
+		process.exit(0);
 	}
 
-	let p_input = path.resolve(process.cwd(), h_cli._[0]);
+	let p_input = path.resolve(process.cwd(), a_pargs[0]);
 
 	let s_prepend = '';
 	if(h_cli.config) {

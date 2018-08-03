@@ -488,6 +488,11 @@ module.exports = (a_sections) => {
 
 						stringify(z_code) {
 							switch(typeof z_code) {
+								case 'undefined': {
+									debugger;
+									throw new Error(\`refusing to serialize undefined\`);
+								}
+
 								case 'string': return \`'\${z_code}'\`;
 
 								case 'number':
@@ -499,10 +504,16 @@ module.exports = (a_sections) => {
 								}
 
 								case 'object': {
+									// jmacs output
+									if(z_code instanceof __JMACS.output) return z_code+'';
+
+									// array
 									if(Array.isArray(z_code)) return \`[\${z_code.map(z => __JMACS.stringify(z)).join(', ')}]\`;
 
+									// regular expression
 									if(z_code instanceof RegExp) return z_code.toString();
 
+									// other type of object
 									switch(z_code.toString()) {
 										case '[object Map]': {
 											let hm_code = z_code;
