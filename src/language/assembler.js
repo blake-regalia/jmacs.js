@@ -381,6 +381,9 @@ class evaluator {
 			exports: h_module.exports,
 			module: h_module,
 			require: (s_package) => {
+				// already in cache
+				if('source-map' === s_package) return sourcemap;
+
 				// resolve to path
 				let p_require = require.resolve(s_package, {
 					paths: [
