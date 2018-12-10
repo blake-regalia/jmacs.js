@@ -16,6 +16,12 @@ module.exports = {
 	tasks: {
 		all: 'link',
 
+		clean: () => ({
+			run: /* syntax: bash */ `
+				rm -rf build/
+			`,
+		}),
+
 		link: () => ({
 			deps: [
 				'build/**',
