@@ -5,7 +5,7 @@ const eq = (z_expect, z_actual) => {
 	assert.strictEqual(z_actual, z_expect);
 };
 
-const jmacs = require('../../build/main/jmacs.js');
+const jmacs = require('../../build/node-js/main/jmacs.js');
 
 
 function compile(s_input, p_cwd='./') {

@@ -19,14 +19,13 @@ module.exports = {
 		link: () => ({
 			deps: [
 				'build/**',
-				'dist/**',
 			],
 			run: /* syntax: bash */ `
-				pushd build/main
+				pushd build/node-js/main
 					npm link
 				popd
 
-				pushd dist/eslint-plugin
+				pushd build/eslint-plugin
 					npm link jmacs
 					npm link
 				popd
@@ -36,33 +35,35 @@ module.exports = {
 
 	outputs: {
 		build: {
-			main: {
-				'jmacs.js': () => ({
-					copy: 'src/main/jmacs.js',
-				}),
+			'node-js': {
+				main: {
+					'jmacs.js': () => ({
+						copy: 'src/main/jmacs.js',
+					}),
+				},
+
+				language: {
+					':parser_file': h => ({
+						copy: `src/language/${h.parser_file}`,
+					}),
+
+					'parser.js': () => ({
+						deps: ['src/language/*.{jison,jisonlex}'],
+						run: /* syntax: bash */ `
+							# compile grammar and lex; output to build dir
+							jison $1 $2 -o $@
+						`,
+					}),
+				},
 			},
 
-			language: {
-				':parser_file': h => ({
-					copy: `src/language/${h.parser_file}`,
-				}),
-
-				'parser.js': () => ({
-					deps: ['src/language/*.{jison,jisonlex}'],
-					run: /* syntax: bash */ `
-						# compile grammar and lex; output to build dir
-						jison $1 $2 -o $@
-					`,
-				}),
-			},
-		},
-
-		dist: {
-			'eslint-plugin': {
+			'sublime-text': {
 				':syntax_file': h => ({
 					copy: `src/syntax/${h.syntax_file}`,
 				}),
+			},
 
+			'eslint-plugin': {
 				'main.js': h => ({
 					copy: `src/eslint-plugin/main.js`,
 				}),

@@ -1,0 +1,343 @@
+%YAML 1.2
+---
+name: jmacs
+file_extensions: [ jmacs ]
+scope: source.jmacs
+
+variables:
+
+  macro_open: '(?<!@)@'
+
+  macro_ahead: '(?=@(import|def|(else)?if|else|end|[-+>:;^.{$]|[.*]\{|//))'
+  macro_in_ahead: '(?=@\*?\{)'
+
+  macro_syntax_eol: '(\s*\n)'
+
+contexts:
+  main:
+    - meta_include_prototype: false
+    - match: '{{macro_ahead}}'
+      set: macros_set
+    - match: '{{PLA_anything}}'
+      set: root
+
+  main_cpp:
+    - meta_include_prototype: false
+    - match: '{{macro_ahead}}'
+      push: macros_set
+    - match: '{{PLA_anything}}'
+      embed: scope:source.c++
+      embed_scope: meta.nested.cpp.jmacs
+      escape: '{{macro_ahead}}'
+
+  main_md:
+    - meta_include_prototype: false
+    - match: '{{macro_ahead}}'
+      push: macros_set
+    - match: '{{PLA_anything}}'
+      embed: scope:text.html.markdown
+      embed_scope: meta.nested.md.jmacs
+      escape: '{{macro_ahead}}'
+
+# MACROS
+
+  macros_push:
+    - meta_content_scope: meta.macro.js.push.jmacs.es
+    - meta_include_prototype: false
+    - match: '{{macro_open}}(import|\^)'
+      scope: support.macro.jmacs.es
+    - include: macro_in_thing
+    - match: '{{macro_open}}\.\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_brace, macro_meta, macro_statements]
+    - match: '{{macro_open}}\.'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_newline, macro_meta, macro_ecmascript]
+    - match: '{{macro_open}}(global|\$)'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_newline, macro_meta, macro_statement]
+    - match: '{{macro_open}}(def|>>?)'
+      scope: support.macro.jmacs.es
+      push: [macro_def_AFTER_DEF]
+    - match: '{{macro_open}}((else)?if|[-+])'
+      scope: support.macro.jmacs.es
+      push: [macro_exit_newline, macro_meta, macro_line]
+    - match: '{{macro_open}}(else|:)'
+      scope: support.macro.jmacs.es
+    - match: '{{macro_open}}(end|;)'
+      scope: support.macro.jmacs.es
+    - match: '(?<!@)(@//)(@)'
+      captures:
+        1: comment.line.es meta.comment.border.es punctuation.definition.comment.begin.es
+        2: support.class.jmacs
+      push: [macro_syntax]
+    - match: '(?<!@)(@//)([^\n]*)\n'
+      captures:
+        1: comment.line.es meta.comment.border.es punctuation.definition.comment.begin.es
+        2: comment.line.es
+    - match: '{{PLA_anything}}'
+      scope: meta.wtf
+
+  macros_set:
+    # - meta_content_scope: meta.macro.js.set.jmacs.es
+    - meta_include_prototype: false
+    - match: '{{macro_open}}(import|\^)'
+      scope: support.macro.jmacs.es
+    - include: macro_in_thing
+    - match: '{{macro_open}}\.\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_brace, macro_meta, macro_statements]
+    - match: '{{macro_open}}\.'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_newline, macro_meta, macro_ecmascript]
+    - match: '{{macro_open}}(global|\$)'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_newline, macro_meta, macro_statement]
+    - match: '{{macro_open}}(def|>>?)'
+      scope: support.macro.jmacs.es
+      set: [macro_def_AFTER_DEF]
+    - match: '{{macro_open}}((else)?if|[-+])'
+      scope: support.macro.jmacs.es
+      set: [macro_exit_newline, macro_meta, macro_ecmascript]
+    - match: '({{macro_open}})(else|:)(\s*\n)'
+      captures:
+        1: support.macro.jmacs.es meta.macro.js.set.jmacs.es
+        2: support.macro.jmacs.es meta.macro.js.set.jmacs.es
+        3: meta.macro.js.set.jmacs.es
+    - match: '({{macro_open}})(end|;)(\s*\n)'
+      captures:
+        1: support.macro.jmacs.es meta.macro.js.set.jmacs.es
+        2: support.macro.jmacs.es meta.macro.js.set.jmacs.es
+        3: meta.macro.js.set.jmacs.es
+    - match: '(?<!@)(@//)(@)'
+      captures:
+        1: comment.line.es meta.comment.border.es punctuation.definition.comment.begin.es meta.macro.js.set.jmacs.es
+        2: support.class.jmacs meta.macro.js.set.jmacs.es
+      set: [macro_syntax]
+    - match: '(?<!@)(@//)([^\n]*)(\n)'
+      captures:
+        1: comment.line.jmacs.es meta.macro.js.set.jmacs.es meta.comment.border.es punctuation.definition.comment.begin.es
+        2: comment.line.jmacs.es meta.macro.js.set.jmacs.es
+        3: meta.macro.js.set.jmacs.es
+    - include: else_pop
+
+  macro_in_thing:
+    - match: '{{macro_open}}\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [ae_AFTER_THING, macro_exit_brace, macro_meta, macro_expression]
+    - match: '{{macro_open}}\*\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [ae_AFTER_THING, macro_exit_brace, macro_meta, macro_statements]
+
+  macro_in_pop:
+    - include: macro_in
+    - include: else_pop
+
+  macro_in:
+    - match: '{{macro_open}}\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_brace, macro_meta, macro_expression]
+    - match: '{{macro_open}}\*\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      push: [macro_exit_brace, macro_meta, macro_statements]
+    - match: '({{macro_open}}//)([^\n]*)(\n)'
+      captures:
+        1: comment.line.jmacs.es meta.macro.js.set.jmacs.es meta.comment.border.es punctuation.definition.comment.begin.es
+        2: comment.line.jmacs.es meta.macro.js.set.jmacs.es
+        3: meta.macro.js.set.jmacs.es
+
+  macro_meta:
+    - meta_content_scope: meta.macro.js.meta.jmacs.es
+    - meta_include_prototype: false
+    - match: '{{PLA_anything}}'
+      pop: true
+
+  macro_ecmascript:
+    - match: '{{PLA_anything}}'
+      set: Packages/User/Ecmascript/ecmascript.sublime-syntax
+      with_prototype:
+        - include: macro_after_open_newline
+
+  macro_line:
+    # - meta_content_scope: meta.macro.js.line.jmacs.es
+    - meta_include_prototype: false
+    - match: '(?=\n)'
+      pop: true
+    - include: expression_line
+
+  expression_line:
+    - meta_include_prototype: false
+    - match: '{{PLA_anything}}'
+      set:
+        - - meta_include_prototype: false
+          - match: '(?=\n)'
+            pop: true
+          - match: ','
+            scope: keyword.operator.comma.es
+            push: 
+              - meta_include_prototype: false
+              - match: '(?=\n)'
+                pop: true
+              - include: assignmentExpression
+          - include: else_pop
+        - - meta_include_prototype: false
+          - match: '(?=\n)'
+            pop: true
+          - include: assignmentExpression
+
+  macro_expression:
+    - match: '(?=})'
+      pop: true
+    - include: expression
+
+  macro_statements:
+    - match: '(?=})'
+      pop: true
+      scope: meta.whitespace.es
+    - include: statements
+
+  macro_statement:
+    - match: '(?=\n)'
+      pop: true
+      scope: meta.whitespace.es
+    - include: statement
+
+
+  macro_def_AFTER_DEF:
+    - meta_scope: meta.macro.js.newline.jmacs
+    - match: '{{allThreeIDs}}'
+      captures:
+        1: entity.name.macro.allCap.es
+        2: entity.name.macro.initCap.es
+        3: entity.name.macro.es
+      set: macro_def_AFTER_NAME
+    - include: other_illegal_pop
+
+  macro_def_AFTER_NAME:
+    - meta_scope: meta.macro.js.newline.jmacs
+    - match: '((\())'
+      captures:
+        1: punctuation.definition.parameters.macro.begin.es
+        2: meta.brace.round.js # ^BS
+      set: [ macro_def_AFTER_PARAMS, parameters ]
+    - include: other_illegal_pop
+
+  macro_def_AFTER_PARAMS:
+    - meta_scope: meta.macro.js.newline.jmacs
+    - match: '((\)))[ \t]*\n'
+      captures:
+        1: punctuation.definition.parameters.macro.end.es
+        2: meta.brace.round.js # ^BS
+      pop: true
+    - include: other_illegal
+
+
+
+  macro_after_open_newline:
+    - meta_include_prototype: false
+    - match: '(?=\n)'
+      pop: true
+
+  macro_after_open_brace:
+    - meta_include_prototype: false
+    - match: '(?=})'
+      pop: true
+
+  macro_exit_newline:
+    - meta_scope: meta.macro.js.newline.jmacs
+    - meta_include_prototype: false
+    - match: '\n'
+      pop: true
+
+  macro_exit_brace:
+    - meta_include_prototype: false
+    - match: '}'
+      scope: support.constant.es meta.macro.js.jmacs.es
+      pop: true
+
+
+  macro_infinite_regex:
+    - meta_include_prototype: false
+    # - match: '\s+'
+    #   scope: string.regexp.es
+    # - match: '\n'
+    #   pop: true
+    # - match: '{{macro_ahead}}'
+    #   set: macro_in_pop
+    - match: '{{PLA_anything}}'
+      set:
+        - - meta_scope: string.regexp.pla.es
+          - meta_include_prototype: false
+          # - match: '(?<!@)(@//)([^\n]*)(\n)'
+          #   captures:
+          #     1: comment.line.jmacs.es meta.macro.js.set.jmacs.es meta.comment.border.es punctuation.definition.comment.begin.es
+          #     2: comment.line.jmacs.es meta.macro.js.set.jmacs.es
+          #     3: meta.macro.js.set.jmacs.es
+          - include: regex_COMMON_NOT_IN_CLASS_SET
+          - match: '(?=@;)'
+            pop: true
+          - include: macro_in
+
+  macro_syntax:
+    - meta_include_prototype: false
+    - match: '{{macro_syntax_eol}}'
+      scope: meta.whitespace.es  meta.macro.js.set.jmacs.es
+      set: [statements]
+    - match: '(syntax:)(\s*)'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: [macro_syntax_set]
+    - match: '(object-literal){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: [literalObject_OPEN]
+    - match: '(class){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: [classDeclaration_AFTER_BRACE]
+    - match: '(arguments){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: [arguments]
+    - match: '(after-identifier){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: [ae_AFTER_IDENTIFIER]
+    - match: '(regex){{macro_syntax_eol}}([\n\s]*)'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+        3: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: [macro_infinite_regex]
+    - match: '([^\n]*)({{macro_syntax_eol}})'
+      captures:
+        1: comment.line.es meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+        3: meta.macro.js.set.jmacs.es
+      pop: true
+    - include: else_pop
+
+  macro_syntax_set:
+    - match: '([cC](?:\+\+|pp|PP)){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: main_cpp
+    - match: '([mM](?:ark)?[dD](?:own)?){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      set: main_md
+    - match: '([jJ](?:ava)?[sS](?:cript)?){{macro_syntax_eol}}'
+      captures:
+        1: support.class.jmacs meta.macro.js.set.jmacs.es
+        2: meta.whitespace.es meta.macro.js.set.jmacs.es
+      embed: scope:source.js
+      embed_scope: meta.nested.js.jmacs
+      escape: '{{macro_ahead}}'
+    - include: else_pop

@@ -10,9 +10,9 @@
   "files": [
     "build"
   ],
-  "main": "build/main/jmacs.js",
+  "main": "build/node-js/main/jmacs.js",
   "bin": {
-    "jmacs": "build/main/jmacs.js"
+    "jmacs": "build/node-js/main/jmacs.js"
   },
   "repository": "blake-regalia/jmacs.js",
   "scripts": {
@@ -20,13 +20,13 @@
   },
   "dependencies": {
     "source-map": "^0.6.1",
-    "yargs": "^12.0.1"
+    "yargs": "^12.0.5"
   },
   "devDependencies": {
-    "emk": "^1.4.1",
+    "emk": "^1.4.3",
     "eslint": "^4.19.1",
     "jison": "^0.4.18",
     "mocha": "^5.2.0",
-    "sort-package-json": "^1.15.0"
+    "sort-package-json": "^1.17.0"
   }
 }
