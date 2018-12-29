@@ -54,15 +54,14 @@ module.exports = function() {
 
 ## CLI
 ```bash
-$ jmacs -h
+$ jmacs --help
+jmacs [OPTIONS] FILE
 
-  Usage: jmacs [options] <file>
-
-  Options:
-
-    -v, --version      output the version number
-    -g, --config <js>  pass a JSON-like JavaScript object to insert global vars at the top
-    -h, --help         output usage information
+Options:
+  -g, --config   pass a JSON-like JavaScript object to insert global vars at the top  [string]
+  -m, --meta     return the meta script instead of the output code                    [boolean]
+  -h, --help     Show help                                                            [boolean]
+  -v, --version  Show version number                                                  [boolean]
 ```
 
 ## Syntax
