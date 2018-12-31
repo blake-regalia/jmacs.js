@@ -424,6 +424,16 @@ class evaluator {
 	}
 }
 
+const gobble = (s_text, s_indent='') => {
+	let m_pad = /^(\s+)/.exec(s_text.replace(/^([ \t]*\n)/, ''));
+	if(m_pad) {
+		return s_indent+s_text.replace(new RegExp(`\\n${m_pad[1]}`, 'g'), '\n'+s_indent.trim()).trim();
+	}
+	else {
+		return s_indent+s_text.trim();
+	}
+};
+
 module.exports = (a_sections) => {
 	return function(p_cwd, p_file=null, h_global=null, h_macros={}) {
 
@@ -450,7 +460,7 @@ module.exports = (a_sections) => {
 			...g_codified.lint,
 		]);
 
-		let s_eval = /* syntax: js */ `
+		let s_eval = gobble(/* syntax: js */ `
 			const __JMACS_OUTPUT = [];
 
 			const __JMACS = {
@@ -665,7 +675,7 @@ debugger;
 					map: ysn_output.map.toString(),
 				};
 			})();
-		`;
+		`);
 
 		return {
 			exports: a_exports,
