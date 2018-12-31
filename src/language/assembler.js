@@ -664,8 +664,9 @@ module.exports = (a_sections) => {
 					return (z_code+'').replace(/\\s+/g, '');
 				},
 			};
-debugger;
+
 			${g_codified.meta}
+
 			return (() => {
 				let ysn_output = (new __JMACS.sourcemap.SourceNode(null, null, null, __JMACS_OUTPUT))
 					.toStringWithSourceMap();
@@ -683,7 +684,9 @@ debugger;
 			meta: {
 				deps: g_codified.deps,
 
-				code: s_eval,
+				code: g_codified.meta,
+
+				standalone: s_eval,
 
 				lint: ysn_meta.toString(),
 

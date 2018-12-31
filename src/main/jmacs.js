@@ -57,7 +57,7 @@ if(module === require.main) {
 	let g_result = main.load(p_input, s_prepend);
 
 	if(h_cli.meta) {
-		process.stdout.write(g_result.meta.code);
+		process.stdout.write(g_result.meta.standalone);
 	}
 	else {
 		let g_output;
