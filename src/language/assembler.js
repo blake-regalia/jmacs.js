@@ -450,13 +450,230 @@ module.exports = (a_sections) => {
 			...g_codified.lint,
 		]);
 
+		let s_eval = /* syntax: js */ `
+			const __JMACS_OUTPUT = [];
+
+			const __JMACS = {
+				R_IDENTIFIER_SAFE: ${R_IDENTIFIER_SAFE},
+
+				sourcemap: require('source-map'),
+
+				output: class {
+					constructor(a_output) {
+						this[__JMACS.is_output] = true;
+						this.output = a_output;
+					}
+
+					valueOf() {
+						return this.output.map(z => z+'').join('');
+					}
+
+					toString() {
+						return this.valueOf();
+					}
+				},
+
+				is_output: '**IS_JMACS_OUTPUT**',
+
+				stringify(z_code) {
+					switch(typeof z_code) {
+						case 'undefined': {
+							debugger;
+							throw new Error(\`refusing to serialize undefined\`);
+						}
+
+						case 'string': return \`'\${z_code}'\`;
+
+						case 'number':
+						case 'boolean':
+							return z_code+'';
+
+						case 'function': {
+							return z_code.toString();
+						}
+
+						case 'object': {
+							// jmacs output
+							if(z_code instanceof __JMACS.output) return z_code+'';
+
+							// array
+							if(Array.isArray(z_code)) return \`[\${z_code.map(z => __JMACS.stringify(z)).join(', ')}]\`;
+
+							// regular expression
+							if(z_code instanceof RegExp) return z_code.toString();
+
+							// other type of object
+							switch(z_code.toString()) {
+								case '[object Map]': {
+									let hm_code = z_code;
+									let a_items = [];
+									for(let [zi_key, z_item] of hm_code) {
+										a_items.push(\`[\${__JMACS.stringify(zi_key)}, \${__JMACS.stringify(z_item)}]\`);
+									}
+									return /* syntax: js */ \`new Map([\${a_items.join(', ')}])\`;
+								}
+
+								case '[object Set]': {
+									let as_code = z_code;
+									let a_items = [];
+									for(let z_item of as_code) {
+										a_items.push(__JMACS.stringify(z_item));
+									}
+									return /* syntax: js */ \`new Set([\${a_items.join(', ')}])\`;
+								}
+
+								case '[object Object]': {
+									let h_object = z_code;
+									let s_object = '{';
+									for(let s_key in h_object) {
+										if(__JMACS.R_IDENTIFIER_SAFE.test(s_key)) s_object += s_key+':';
+										else s_object += \`'\${s_key.replace(/'/g, '\\\\\\'')}':\`;
+
+										s_object += __JMACS.stringify(h_object[s_key])+', ';
+									}
+
+									return s_object+'}';
+								}
+
+								default: break;
+							}
+
+							break;
+						}
+
+						default: break;
+					}
+
+					throw new Error(\`not sure how to serialize object: \${z_code}\`);
+
+					// return util.inspect(z_code, {
+					// 	depth: Infinity,
+					// 	customInspect: false,
+					// 	maxArrayLength: Infinity,
+					// 	breakLength: Infinity,
+
+					// });
+				},
+
+				srcmap: (z_code, g_loc, s_name=null) => {
+					if(z_code && z_code[__JMACS.is_output]) {
+						return z_code.output;
+					}
+
+					let i_row = g_loc.first_line;
+					let i_col = g_loc.first_column;
+
+					let a_lines = 'string' === typeof z_code
+						? z_code.split(/\\n/g)
+						: __JMACS.stringify(z_code).split(/\\n/g);
+					let nl_lines = a_lines.length;
+					let a_output = [];
+
+					for(let i_line=0; i_line<nl_lines; i_line++) {
+						let s_line = a_lines[i_line];
+						let w_node = s_line;
+
+						// content
+						if(s_line.trim()) {
+							w_node = new __JMACS.sourcemap.SourceNode(
+								i_row,
+								i_col,
+								'meta',
+								s_line,
+								s_name,
+							);
+						}
+
+						// next line
+						i_row += 1;
+
+						// 0th column
+						i_col = 0;
+
+						// content
+						if(w_node) a_output.push(w_node);
+
+						// inter-newline
+						if(i_line < nl_lines-1) a_output.push('\\n');
+					}
+
+					return a_output;
+				},
+
+				safe_exec: (__f, s_prev, c_depth=0) => {
+					try {
+						return __f();
+					} catch(e_append) {
+						// allow reference errors
+						// doesn't work anymore? e_append instance ReferenceError
+						if(/^ReferenceError:/.test(e_append.stack)) {
+							if(c_depth > 4) {
+								debugger;
+							}
+
+							let s_identifier = e_append.message.replace(/^(.+) is not defined$/, '$1');
+
+							// it is defined in global scope
+							if(s_identifier in global) {
+								// prevent infinite loop
+								if('*'+s_identifier === s_prev) {
+									debugger;
+									throw new Error(\`cannot use identifier \${s_identifier}\`);
+								}
+
+								// re-evaluate
+								return __JMACS.safe_exec(new Function(\`
+									let \${s_identifier} = global[\${JSON.stringify(s_identifier)}];
+									return (\${__f.toString()})();
+								\`), '*'+s_identifier, c_depth+1);
+							}
+
+							// prevent infinite loop
+							if(s_identifier === s_prev) {
+								debugger;
+								throw new Error(\`cannot use identifier \${s_identifier}\`);
+							}
+
+							// print
+							console.warn(\`identifier was never declared: '\${s_identifier}'; automatically declaring as undefined\`);
+
+							// re-evaluate
+							return __JMACS.safe_exec(new Function(\`
+								let \${s_identifier};
+								return (\${__f.toString()})();
+							\`), s_identifier, c_depth+1);
+						}
+						else {
+							debugger;
+							throw new Error(\`execution error in meta-script:\\n\${e_append.message}\\n\${e_append.stack}\`);
+						}
+					}
+				},
+
+				cram: (z_code) => {
+					return (z_code+'').replace(/\\s+/g, '');
+				},
+			};
+debugger;
+			${g_codified.meta}
+			return (() => {
+				let ysn_output = (new __JMACS.sourcemap.SourceNode(null, null, null, __JMACS_OUTPUT))
+					.toStringWithSourceMap();
+
+				return {
+					code: ysn_output.code,
+					map: ysn_output.map.toString(),
+				};
+			})();
+		`;
+
 		return {
 			exports: a_exports,
 
 			meta: {
 				deps: g_codified.deps,
 
-				code: g_codified.meta,
+				code: s_eval,
 
 				lint: ysn_meta.toString(),
 
@@ -464,223 +681,6 @@ module.exports = (a_sections) => {
 			},
 
 			run() {
-				let s_eval = /* syntax: js */ `
-					const __JMACS_OUTPUT = [];
-
-					const __JMACS = {
-						R_IDENTIFIER_SAFE: ${R_IDENTIFIER_SAFE},
-
-						sourcemap: require('source-map'),
-
-						output: class {
-							constructor(a_output) {
-								this[__JMACS.is_output] = true;
-								this.output = a_output;
-							}
-
-							valueOf() {
-								return this.output.map(z => z+'').join('');
-							}
-
-							toString() {
-								return this.valueOf();
-							}
-						},
-
-						is_output: '**IS_JMACS_OUTPUT**',
-
-						stringify(z_code) {
-							switch(typeof z_code) {
-								case 'undefined': {
-									debugger;
-									throw new Error(\`refusing to serialize undefined\`);
-								}
-
-								case 'string': return \`'\${z_code}'\`;
-
-								case 'number':
-								case 'boolean':
-									return z_code+'';
-
-								case 'function': {
-									return z_code.toString();
-								}
-
-								case 'object': {
-									// jmacs output
-									if(z_code instanceof __JMACS.output) return z_code+'';
-
-									// array
-									if(Array.isArray(z_code)) return \`[\${z_code.map(z => __JMACS.stringify(z)).join(', ')}]\`;
-
-									// regular expression
-									if(z_code instanceof RegExp) return z_code.toString();
-
-									// other type of object
-									switch(z_code.toString()) {
-										case '[object Map]': {
-											let hm_code = z_code;
-											let a_items = [];
-											for(let [zi_key, z_item] of hm_code) {
-												a_items.push(\`[\${__JMACS.stringify(zi_key)}, \${__JMACS.stringify(z_item)}]\`);
-											}
-											return /* syntax: js */ \`new Map([\${a_items.join(', ')}])\`;
-										}
-
-										case '[object Set]': {
-											let as_code = z_code;
-											let a_items = [];
-											for(let z_item of as_code) {
-												a_items.push(__JMACS.stringify(z_item));
-											}
-											return /* syntax: js */ \`new Set([\${a_items.join(', ')}])\`;
-										}
-
-										case '[object Object]': {
-											let h_object = z_code;
-											let s_object = '{';
-											for(let s_key in h_object) {
-												if(__JMACS.R_IDENTIFIER_SAFE.test(s_key)) s_object += s_key+':';
-												else s_object += \`'\${s_key.replace(/'/g, '\\\\\\'')}':\`;
-
-												s_object += __JMACS.stringify(h_object[s_key])+', ';
-											}
-
-											return s_object+'}';
-										}
-
-										default: break;
-									}
-
-									break;
-								}
-
-								default: break;
-							}
-
-							throw new Error(\`not sure how to serialize object: \${z_code}\`);
-
-							// return util.inspect(z_code, {
-							// 	depth: Infinity,
-							// 	customInspect: false,
-							// 	maxArrayLength: Infinity,
-							// 	breakLength: Infinity,
-
-							// });
-						},
-
-						srcmap: (z_code, g_loc, s_name=null) => {
-							if(z_code && z_code[__JMACS.is_output]) {
-								return z_code.output;
-							}
-
-							let i_row = g_loc.first_line;
-							let i_col = g_loc.first_column;
-
-							let a_lines = 'string' === typeof z_code
-								? z_code.split(/\\n/g)
-								: __JMACS.stringify(z_code).split(/\\n/g);
-							let nl_lines = a_lines.length;
-							let a_output = [];
-
-							for(let i_line=0; i_line<nl_lines; i_line++) {
-								let s_line = a_lines[i_line];
-								let w_node = s_line;
-
-								// content
-								if(s_line.trim()) {
-									w_node = new __JMACS.sourcemap.SourceNode(
-										i_row,
-										i_col,
-										'meta',
-										s_line,
-										s_name,
-									);
-								}
-
-								// next line
-								i_row += 1;
-
-								// 0th column
-								i_col = 0;
-
-								// content
-								if(w_node) a_output.push(w_node);
-
-								// inter-newline
-								if(i_line < nl_lines-1) a_output.push('\\n');
-							}
-
-							return a_output;
-						},
-
-						safe_exec: (__f, s_prev, c_depth=0) => {
-							try {
-								return __f();
-							} catch(e_append) {
-								// allow reference errors
-								// doesn't work anymore? e_append instance ReferenceError
-								if(/^ReferenceError:/.test(e_append.stack)) {
-									if(c_depth > 4) {
-										debugger;
-									}
-
-									let s_identifier = e_append.message.replace(/^(.+) is not defined$/, '$1');
-
-									// it is defined in global scope
-									if(s_identifier in global) {
-										// prevent infinite loop
-										if('*'+s_identifier === s_prev) {
-											debugger;
-											throw new Error(\`cannot use identifier \${s_identifier}\`);
-										}
-
-										// re-evaluate
-										return __JMACS.safe_exec(new Function(\`
-											let \${s_identifier} = global[\${JSON.stringify(s_identifier)}];
-											return (\${__f.toString()})();
-										\`), '*'+s_identifier, c_depth+1);
-									}
-
-									// prevent infinite loop
-									if(s_identifier === s_prev) {
-										debugger;
-										throw new Error(\`cannot use identifier \${s_identifier}\`);
-									}
-
-									// print
-									console.warn(\`identifier was never declared: '\${s_identifier}'; automatically declaring as undefined\`);
-
-									// re-evaluate
-									return __JMACS.safe_exec(new Function(\`
-										let \${s_identifier};
-										return (\${__f.toString()})();
-									\`), s_identifier, c_depth+1);
-								}
-								else {
-									debugger;
-									throw new Error(\`execution error in meta-script:\\n\${e_append.message}\\n\${e_append.stack}\`);
-								}
-							}
-						},
-
-						cram: (z_code) => {
-							return (z_code+'').replace(/\\s+/g, '');
-						},
-					};
-debugger;
-					${g_codified.meta}
-					return (() => {
-						let ysn_output = (new __JMACS.sourcemap.SourceNode(null, null, null, __JMACS_OUTPUT))
-							.toStringWithSourceMap();
-
-						return {
-							code: ysn_output.code,
-							map: ysn_output.map.toString(),
-						};
-					})();
-				`;
-// debugger;
 				let z_result;
 				try {
 					z_result = k_evaluator.run(s_eval);
