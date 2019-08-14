@@ -19,15 +19,15 @@
     "test": "emk && mocha test/main/jmacs.js"
   },
   "dependencies": {
-    "source-map": "^0.6.1",
-    "yargs": "^12.0.5"
+    "source-map": "^0.7.3",
+    "yargs": "^13.3.0"
   },
   "devDependencies": {
-    "emk": "^1.4.3",
-    "eslint": "^4.19.1",
+    "emk": "^1.7.2",
+    "eslint": "^6.1.0",
     "jison": "^0.4.18",
     "lambduh": "^3.1.0",
-    "mocha": "^5.2.0",
-    "sort-package-json": "^1.17.0"
+    "mocha": "^6.2.0",
+    "sort-package-json": "^1.22.1"
   }
 }
