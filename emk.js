@@ -37,6 +37,19 @@ module.exports = {
 				popd
 			`,
 		}),
+
+		publish: () => ({
+			deps: [
+				'build/**',
+			],
+			run: /* syntax: bash */ `
+				npm publish
+
+				pushd build/eslint-plugin
+					npm publish
+				popd
+			`,
+		}),
 	},
 
 	outputs: {
