@@ -324,6 +324,24 @@
 		</dict>
 		<dict>
 			<key>scope</key>
+			<string>meta.directive.syntax.keyword</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#75789c</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>scope</key>
+			<string>meta.directive.syntax.language</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#98a8b3</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>scope</key>
 			<string>markup.warning.sublime_linter</string>
 			<key>settings</key>
 			<dict>
@@ -337,7 +355,7 @@
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
-				<string>#DF2604</string>
+				<string>#CD0A00</string>
 			</dict>
 		</dict>
 		<dict>
@@ -467,7 +485,7 @@
 			<key>name</key>
 			<string>Function &amp; Return &amp; Do Expression</string>
 			<key>scope</key>
-			<string>entity.name.function, keyword.control.do-expression.do, keyword.control.flow.return, punctuation.definition.block.do-expression, punctuation.definition.function.async.body, punctuation.definition.function.body, punctuation.definition.function.arrow.body, punctuation.definition.parameters.function</string>
+			<string>entity.name.function, keyword.control.do-expression.do, keyword.control.flow.return, punctuation.definition.block.do-expression, punctuation.definition.function.async.body, punctuation.definition.function.body, punctuation.definition.function.async.arrow.body, punctuation.definition.function.arrow.body, punctuation.definition.parameters.function</string>
 			<key>settings</key>
 			<dict>
 				<key>foreground</key>
@@ -597,6 +615,17 @@
 		</dict>
 		<dict>
 			<key>name</key>
+			<string>Private Method</string>
+			<key>scope</key>
+			<string>entity.name.accessor.get.private, entity.name.accessor.set.private, entity.name.method.private, punctuation.definition.accessor.private.body, punctuation.definition.parameters.accessor.private, punctuation.definition.parameters.method.private, punctuation.definition.method.private</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#B7B1BE</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
 			<string>Generator Method</string>
 			<key>scope</key>
 			<string>entity.name.method.generator, punctuation.definition.method.generator.body, punctuation.definition.parameters.method.generator</string>
@@ -610,13 +639,35 @@
 			<key>name</key>
 			<string>Decorator</string>
 			<key>scope</key>
-			<string>punctuation.definition.decorator, variable.other.readwrite.decorator</string>
+			<string>keyword.operator.accessor.decorator, variable.other.readwrite.decorator</string>
 			<key>settings</key>
 			<dict>
 				<key>fontStyle</key>
 				<string>italic</string>
 				<key>foreground</key>
 				<string>#597873</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Decorator Arguments</string>
+			<key>scope</key>
+			<string>meta.decorator.arguments.es punctuation.definition.arguments, punctuation.definition.decorator</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#597873</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Decorator Parenthesized Expression</string>
+			<key>scope</key>
+			<string>meta.decorator.parenthesized.es</string>
+			<key>settings</key>
+			<dict>
+				<key>background</key>
+				<string>#333333</string>
 			</dict>
 		</dict>
 		<dict>
@@ -803,6 +854,19 @@
 		</dict>
 		<dict>
 			<key>name</key>
+			<string>Syntax Template Literal Interpolated</string>
+			<key>scope</key>
+			<string>meta.interpolation.interpolated</string>
+			<key>settings</key>
+			<dict>
+				<key>background</key>
+				<string>#18182c</string>
+				<key>fontStyle</key>
+				<string>normal</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
 			<string>Syntax Template Literal Content</string>
 			<key>scope</key>
 			<string>meta.interpolation.syntax</string>
@@ -867,6 +931,30 @@
 			<dict>
 				<key>fontStyle</key>
 				<string>bold</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Regex Char Classes (Character Property)</string>
+			<key>scope</key>
+			<string>meta.character-property constant, meta.character-property punctuation</string>
+			<key>settings</key>
+			<dict>
+				<key>fontStyle</key>
+				<string>italic</string>
+				<key>foreground</key>
+				<string>#75CEA4</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>name</key>
+			<string>Regex Char Classes (Character Property, Delimiters)</string>
+			<key>scope</key>
+			<string>meta.character-property punctuation</string>
+			<key>settings</key>
+			<dict>
+				<key>foreground</key>
+				<string>#9AD8BB</string>
 			</dict>
 		</dict>
 		<dict>
@@ -1022,7 +1110,7 @@
 			<key>settings</key>
 			<dict>
 				<key>background</key>
-				<string>#7BB664 89</string>
+				<string>#7BB66489</string>
 			</dict>
 		</dict>
 		<dict>

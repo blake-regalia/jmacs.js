@@ -1,5 +1,3 @@
-%YAML 1.2
----
 # [PackageDev] target_format: plist, ext: tmTheme
 name: Excelsior
 uuid: 0ab48683-c74c-4eef-8efe-a320e080a8b8
@@ -130,13 +128,29 @@ settings:
     foreground: '#B2BD95'
     fontStyle: 'italic'
 
+- scope: meta.directive.syntax.keyword
+  settings:
+    foreground: '#75789c'
+
+- scope: meta.directive.syntax.language
+  settings:
+    foreground: '#98a8b3'
+
+## inherit from comment.*
+# - scope: meta.directive.syntax.context
+#   settings:
+#     foreground: '#758B99'
+
+# LINTING #####################################################################
+
 - scope: markup.warning.sublime_linter
   settings:
     foreground: '#F2B705'
 
 - scope: markup.error.sublime_linter
   settings:
-    foreground: '#DF2604'
+    foreground: '#CD0A00'
+
 
 # STATEMENTS ###################################################################
 
@@ -244,6 +258,7 @@ settings:
     punctuation.definition.block.do-expression,
     punctuation.definition.function.async.body,
     punctuation.definition.function.body,
+    punctuation.definition.function.async.arrow.body,
     punctuation.definition.function.arrow.body,
     punctuation.definition.parameters.function
   settings:
@@ -335,6 +350,18 @@ settings:
   settings:
     foreground: '#F4805B'
 
+- name: Private Method
+  scope: >-
+    entity.name.accessor.get.private,
+    entity.name.accessor.set.private,
+    entity.name.method.private,
+    punctuation.definition.accessor.private.body,
+    punctuation.definition.parameters.accessor.private,
+    punctuation.definition.parameters.method.private,
+    punctuation.definition.method.private
+  settings:
+    foreground: '#B7B1BE'
+
 - name: Generator Method
   scope: >-
     entity.name.method.generator,
@@ -345,11 +372,24 @@ settings:
 
 - name: Decorator
   scope: >-
-    punctuation.definition.decorator,
+    keyword.operator.accessor.decorator,
     variable.other.readwrite.decorator
   settings:
     fontStyle: 'italic'
     foreground: '#597873'
+
+- name: Decorator Arguments
+  scope: >-
+    meta.decorator.arguments.es punctuation.definition.arguments,
+    punctuation.definition.decorator
+  settings:
+    foreground: '#597873'
+
+- name: Decorator Parenthesized Expression
+  scope: >-
+    meta.decorator.parenthesized.es
+  settings:
+    background: '#333333'
 
 - name: Module Import, Export
   scope: >-
@@ -464,6 +504,12 @@ settings:
     background: '#212121'
     fontStyle: italic
 
+- name: Syntax Template Literal Interpolated
+  scope: meta.interpolation.interpolated
+  settings:
+    background: '#18182c'
+    fontStyle: normal
+
 - name: Syntax Template Literal Content
   scope: meta.interpolation.syntax
   settings:
@@ -474,6 +520,7 @@ settings:
   scope: meta.macro.js
   settings:
     background: '#1E1E2B'
+
 
 # REGEX ########################################################################
 
@@ -502,6 +549,20 @@ settings:
     string.regexp keyword.other.back-reference
   settings:
     fontStyle: 'bold'
+
+- name: Regex Char Classes (Character Property)
+  scope: >-
+    meta.character-property constant,
+    meta.character-property punctuation
+  settings:
+    fontStyle: 'italic'
+    foreground: '#75CEA4'
+
+- name: Regex Char Classes (Character Property, Delimiters)
+  scope: >-
+    meta.character-property punctuation
+  settings:
+    foreground: '#9AD8BB'
 
 - name: Regex Char Escapes
   scope: string.regexp constant.character.escape
@@ -591,7 +652,7 @@ settings:
     meta.group.capturing.regexp
     meta.group.capturing.regexp
   settings:
-    background: '#7BB664 89'
+    background: '#7BB66489'
 
 - name: Regex Outer Punc
   scope: punctuation.definition.string.regexp
