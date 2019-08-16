@@ -361,16 +361,21 @@ contexts:
     - meta_include_prototype: false
     - match: '{{macro_open}}(import|\^)'
       scope: support.macro.jmacs.es
-    - include: macro_in_thing
+    - match: '{{macro_open}}\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      set: [macro_exit_brace, macro_meta, macro_expression]
+    - match: '{{macro_open}}\*\{'
+      scope: support.macro.jmacs.es meta.macro.js.jmacs.es
+      set: [macro_exit_brace, macro_meta, macro_statements]
     - match: '{{macro_open}}\.\{'
       scope: support.macro.jmacs.es meta.macro.js.jmacs.es
-      push: [macro_exit_brace, macro_meta, macro_statements]
+      set: [macro_exit_brace, macro_meta, macro_statements]
     - match: '{{macro_open}}\.'
       scope: support.macro.jmacs.es meta.macro.js.jmacs.es
-      push: [macro_exit_newline, macro_meta, macro_ecmascript]
+      set: [macro_exit_newline, macro_meta, macro_ecmascript]
     - match: '{{macro_open}}(global|\$)'
       scope: support.macro.jmacs.es meta.macro.js.jmacs.es
-      push: [macro_exit_newline, macro_meta, macro_statement]
+      set: [macro_exit_newline, macro_meta, macro_statement]
     - match: '{{macro_open}}(def|>>?)'
       scope: support.macro.jmacs.es
       set: [macro_def_AFTER_DEF]
@@ -544,16 +549,16 @@ contexts:
     #   set: macro_in_pop
     - match: '{{PLA_anything}}'
       set:
-        - - meta_scope: string.regexp.pla.es
+        - - meta_scope: string.regexp.pla.inf.es
           - meta_include_prototype: false
           # - match: '(?<!@)(@//)([^\n]*)(\n)'
           #   captures:
           #     1: comment.line.jmacs.es meta.macro.js.set.jmacs.es meta.comment.border.es punctuation.definition.comment.begin.es
           #     2: comment.line.jmacs.es meta.macro.js.set.jmacs.es
           #     3: meta.macro.js.set.jmacs.es
-          - include: regex_COMMON_NOT_IN_CLASS_SET
-          - match: '(?=@;)'
+          - match: '^(?=\s*@;)'
             pop: true
+          - include: regex_COMMON_NOT_IN_CLASS_SET
           - include: macro_in
 
   macro_syntax:
@@ -5085,8 +5090,6 @@ contexts:
     - meta_include_prototype: false
     # It’s okay to put this here; comments are always matched first.
     - include: regex_COMMON_NOT_IN_CLASS_SET
-    - match: '{{macro_ahead}}'
-      set: macros_set
 
   regex_ANY_CHILD_CONTEXT:
     # Child contexts are tricky here because we need to be able to terminate
@@ -5190,6 +5193,9 @@ contexts:
       scope: constant.character.escape.regexp
     - match: '\\.'
       scope: constant.character.escape.pointless.regexp
+    - match: '{{macro_ahead}}'
+      push: macros_set
+      # set: [regex_COMMON_NOT_IN_CLASS_SET, macros_set]
 
   regexp_AFTER_BRACKET:
     - meta_scope: constant.other.character-class.set.regexp
