@@ -171,7 +171,7 @@ const h_codify = {
 			__JMACS_OUTPUT.push(
 				...__JMACS.srcmap(
 					${b_cram? `__JMACS.cram(`: ''}
-						__JMACS.safe_exec(() => (${g_expr.code}))
+						__JMACS.safe_exec(() => (${g_expr.code}), ${JSON.stringify(g_expr.code)})
 					${b_cram? `)`: ''},
 					${JSON.stringify(g_expr.loc)},
 					'inline',
@@ -201,7 +201,7 @@ const h_codify = {
 		];
 
 		let s_meta = /* syntax: js */ `
-			if(__JMACS.safe_exec(() => (${g.if.code}))) {
+			if(__JMACS.safe_exec(() => (${g.if.code}), ${JSON.stringify(g.if.code)})) {
 				${gc_then.meta}
 			}`;
 
@@ -217,7 +217,7 @@ const h_codify = {
 			]);
 
 			s_meta += /* syntax: js */ `
-				else if(__JMACS.safe_exec(() => (${g_elseif.if.code}))) {
+				else if(__JMACS.safe_exec(() => (${g_elseif.if.code}), ${JSON.stringify(g_elseif.if.code)})) {
 					${gc_elseif_then.meta}
 				}`;
 		}
@@ -277,7 +277,7 @@ const h_codify = {
 				srcmap(s_oper+s_value, {first_column:i_col, first_line:i_row}),
 				'\n',
 			],
-			meta: /* syntax: js */ `${b_first? 'let ': ''}${s_var} = global['${s_var}'] ${s_oper} __JMACS.safe_exec(() => (${s_value}));`,
+			meta: /* syntax: js */ `${b_first? 'let ': ''}${s_var} = global['${s_var}'] ${s_oper} __JMACS.safe_exec(() => (${s_value}), ${JSON.stringify(s_value)});`,
 		};
 	},
 
@@ -485,11 +485,11 @@ module.exports = (a_sections) => {
 
 				is_output: '**IS_JMACS_OUTPUT**',
 
-				stringify(z_code) {
+				stringify(z_code, s_src=null) {
 					switch(typeof z_code) {
 						case 'undefined': {
 							debugger;
-							throw new Error(\`refusing to serialize undefined\`);
+							throw new Error(\`refusing to serialize undefined\${'string' === typeof s_src? ' at : """\n'+s_src+'\n"""': ''}\`);
 						}
 
 						case 'string': return \`'\${z_code}'\`;
@@ -610,7 +610,7 @@ module.exports = (a_sections) => {
 					return a_output;
 				},
 
-				safe_exec: (__f, s_prev, c_depth=0) => {
+				safe_exec: (__f, sjf_code, s_prev, c_depth=0) => {
 					try {
 						return __f();
 					} catch(e_append) {
@@ -632,10 +632,11 @@ module.exports = (a_sections) => {
 								}
 
 								// re-evaluate
-								return __JMACS.safe_exec(new Function(\`
+								let sjf_reeval = \`
 									let \${s_identifier} = global[\${JSON.stringify(s_identifier)}];
 									return (\${__f.toString()})();
-								\`), '*'+s_identifier, c_depth+1);
+								\`;
+								return __JMACS.safe_exec(new Function(sjf_reeval), sjf_reeval, '*'+s_identifier, c_depth+1);
 							}
 
 							// prevent infinite loop
@@ -648,14 +649,15 @@ module.exports = (a_sections) => {
 							console.warn(\`identifier was never declared: '\${s_identifier}'; automatically declaring as undefined\`);
 
 							// re-evaluate
-							return __JMACS.safe_exec(new Function(\`
+							let sjf_reeval = \`
 								let \${s_identifier};
 								return (\${__f.toString()})();
-							\`), s_identifier, c_depth+1);
+							\`;
+							return __JMACS.safe_exec(new Function(sjf_reeval), sjf_reeval, s_identifier, c_depth+1);
 						}
 						else {
 							debugger;
-							throw new Error(\`execution error in meta-script:\\n\${e_append.message}\\n\${e_append.stack}\`);
+							throw new Error(\`execution error in meta-script while attempting to execute """\\n\${sjf_code}\\n"""... \\n\${e_append.message}\\n\${e_append.stack}\`);
 						}
 					}
 				},
