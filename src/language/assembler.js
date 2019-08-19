@@ -489,7 +489,7 @@ module.exports = (a_sections) => {
 					switch(typeof z_code) {
 						case 'undefined': {
 							debugger;
-							throw new Error(\`refusing to serialize undefined\${'string' === typeof s_src? ' at : """\n'+s_src+'\n"""': ''}\`);
+							throw new Error(\`refusing to serialize undefined\${'string' === typeof s_src? ' at : """\\n'+s_src+'\\n"""': ''}\`);
 						}
 
 						case 'string': return \`'\${z_code}'\`;
