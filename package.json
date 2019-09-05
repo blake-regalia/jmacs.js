@@ -20,11 +20,11 @@
   },
   "dependencies": {
     "source-map": "0.6.1",
-    "yargs": "^13.3.0"
+    "yargs": "^14.0.0"
   },
   "devDependencies": {
     "emk": "^1.7.2",
-    "eslint": "^6.2.0",
+    "eslint": "^6.3.0",
     "jison": "^0.4.18",
     "lambduh": "^3.1.0",
     "mocha": "^6.2.0",
