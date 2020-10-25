@@ -20,6 +20,56 @@ const srcmap = (z_code, g_loc, s_name=null) => {
 	));
 };
 
+function strip_indent(a_parts, s_indent_offset) {
+	// remove indent offset from body
+	if(s_indent_offset) {
+		let b_prev_newline = true;
+
+		for(let i_part=0, nl_parts=a_parts.length; i_part<nl_parts; i_part++) {
+			const g_part = a_parts[i_part];
+
+			// strip from before
+			if(g_part && g_part.before) {
+				g_part.before = g_part.before.replace(s_indent_offset, '');
+			}
+
+			switch(g_part.type) {
+				case 'whitespace': {
+					// newline
+					if('\n' === g_part.text) {
+						b_prev_newline = true;
+						continue;
+					}
+					// space; remove indent offset
+					else if(b_prev_newline) {
+						const s_replace = g_part.text.replace(s_indent_offset, '');
+						if(!s_replace) {
+							a_parts.splice(i_part, 1);
+							i_part -= 1;
+							nl_parts -= 1;
+						}
+						else {
+							g_part.text = s_replace;
+						}
+					}
+					break;
+				}
+
+				case 'if': {
+					strip_indent(g_part.then, s_indent_offset);
+					g_part.elseifs.map(g => strip_indent(g, s_indent_offset));
+					if(g_part.else) strip_indent(g_part.else, s_indent_offset);
+					break;
+				}
+
+				default: {}  // eslint-disable-line no-empty
+			}
+
+			b_prev_newline = false;
+		}
+	}
+}
+
 const h_codify = {
 	import({target:g_target}, g_extras) {
 		let s_file = eval(g_target.code);
@@ -50,58 +100,21 @@ const h_codify = {
 		};
 	},
 
-	macro({head:g_head, body:a_body, cram:b_cram}, g_extras) {
+	macro({head:g_head, body:a_body, cram:b_cram, before:s_before}, g_extras) {
 		// normalize cram
 		b_cram = b_cram || g_extras.cram;
 
+		const {
+			s_pre,
+			s_strip,
+		} = this.indents(s_before, g_extras.align);
+
+		strip_indent(a_body, s_strip);
+
+		// not a crammed-space macro
 		if(!b_cram) {
 			// gobble indent
 			let nl_body = a_body.length;
-			for(let i_text=0; i_text<nl_body-1; i_text++) {
-				if(a_body[i_text].text) {
-					let s_text_0 = a_body[i_text].text;
-					let s_pre = s_text_0.replace(/^(\s*)[^]*$/, '$1');
-					let nl_pre = s_pre.length;
-
-					// // trim whitespace from beginning while we're here
-					// a_body[i_text].text = s_text_0.slice(s_pre.length);
-					// if(!a_body[i_text].text) {
-					// 	a_body.splice(i_text, 1);
-					// 	nl_body -= 1;
-					// }
-
-					let r_pre_nl = new RegExp('\\n'+s_pre, 'g');
-					let r_pre_anchor = new RegExp('^'+s_pre);
-
-					let b_prev_newline = false;
-					for(let g_node of a_body) {
-						if(g_node.text) {
-							if(b_prev_newline) {
-								if(r_pre_anchor.test(g_node.text)) {
-									g_node.text = g_node.text.replace(r_pre_anchor, '');
-									g_node.loc.first_column += nl_pre;
-									g_node.loc.last_column += nl_pre;
-								}
-							}
-							else {
-								g_node.text = g_node.text.replace(r_pre_nl, '\n');
-								g_node.loc.first_column += nl_pre;
-								g_node.loc.last_column += nl_pre;
-							}
-
-							b_prev_newline = g_node.text.endsWith('\n');
-						}
-						else if(g_node.line) {
-							b_prev_newline = true;
-						}
-						else {
-							b_prev_newline = false;
-						}
-					}
-
-					break;
-				}
-			}
 
 			// trim whitespace from end
 			for(let i_text=nl_body-1; i_text>=0; i_text--) {
@@ -120,11 +133,19 @@ const h_codify = {
 		}
 
 		// codify children
-		let g_codified = this.codify(a_body, Object.assign({}, g_extras, {cram:b_cram}));
+		let g_codified = this.codify(a_body, {
+			...g_extras,
+			cram: b_cram,
+			indent_start: s_before,
+		});
 
 		// export function name
 		let s_name = g_head.code.replace(/^\s*([^\s\n*(]+)[^]*$/, '$1');
 		this.state.exports.add(s_name);
+
+		const sj_pre = /* syntax: js */ `
+			__JMACS_OUTPUT.push(${JSON.stringify(s_pre)});
+		`;
 
 		return {
 			lint: [
@@ -134,7 +155,7 @@ const h_codify = {
 				...g_codified.lint,
 				'}\n',
 			],
-			meta: /* syntax: js */ `const ${s_name} = global['${s_name}'] = function ${g_head.code} {
+			meta: sj_pre+/* syntax: js */ `const ${s_name} = global['${s_name}'] = function ${g_head.code} {
 				const __JMACS_OUTPUT = [];
 				${g_codified.meta}
 				return new __JMACS.output(__JMACS_OUTPUT);
@@ -161,23 +182,33 @@ const h_codify = {
 		`,
 	}),
 
-	inline: ({expr:g_expr}, {cram:b_cram}) => ({
-		lint: [
-			'(() => (',
-			srcmap(g_expr.code, g_expr.loc),
-			'))();\n',
-		],
-		meta: /* syntax: js */ `
-			__JMACS_OUTPUT.push(
-				...__JMACS.srcmap(
-					${b_cram? `__JMACS.cram(`: ''}
-						__JMACS.safe_exec(() => (${g_expr.code}), ${JSON.stringify(g_expr.code)})
-					${b_cram? `)`: ''},
-					${JSON.stringify(g_expr.loc)},
-					'inline',
-				));
-		`,
-	}),
+	inline({expr:g_expr, before:s_before}, {cram:b_cram, align:s_align_prior=null}) {
+		const {
+			s_pre,
+			s_align_future,
+		} = this.indents(s_before, s_align_prior, true);
+
+		return {
+			lint: [
+				'(() => (',
+				srcmap(g_expr.code, g_expr.loc),
+				'))();\n',
+			],
+					// ${s_before? JSON.stringify(s_before)+',': ''}
+					// (s_before? h_codify.verbatim({text:s_before, loc:g_expr.loc}, {}).meta: '')+
+			meta: /* syntax: js */ `
+				__JMACS_OUTPUT.push(
+					${JSON.stringify(s_pre)},
+					...__JMACS.srcmap(
+						__JMACS.${b_cram? 'cram': 'indent'}(
+							__JMACS.safe_exec(() => (${g_expr.code}), ${JSON.stringify(g_expr.code)})${b_cram? '': `, '${s_align_future || ''}'`}
+						),
+						${JSON.stringify(g_expr.loc)},
+						'inline',
+					));
+			`,
+		};
+	},
 
 	meta: ({meta:g_meta, line:b_line}, g_extras) => {
 		return ({
@@ -190,6 +221,31 @@ const h_codify = {
 	},
 
 	if(g, g_extras) {
+		const {
+			s_pre,
+			s_align_future,
+			s_strip,
+		} = this.indents(g.before, g_extras.align, false);
+
+
+		g_extras = {
+			...g_extras,
+			align: s_align_future,
+		};
+
+		// strip parts
+		{
+			// strip then
+			strip_indent(g.then, s_strip);
+
+			// strip else ifs
+			g.elseifs.map(g_elseif => strip_indent(g_elseif, s_strip));
+
+			// strip else
+			if(g.else) strip_indent(g.else, s_strip);
+		}
+
+		// codify 'then' block
 		let gc_then = this.codify(g.then, g_extras);
 
 		let a_lint = [
@@ -201,6 +257,7 @@ const h_codify = {
 		];
 
 		let s_meta = /* syntax: js */ `
+			__JMACS_OUTPUT.push(${JSON.stringify(s_pre)});
 			if(__JMACS.safe_exec(() => (${g.if.code}), ${JSON.stringify(g.if.code)})) {
 				${gc_then.meta}
 			}`;
@@ -281,7 +338,11 @@ const h_codify = {
 		};
 	},
 
-	generator({expr:g_expr}) {
+	generator({expr:g_expr, before:s_before}, {align:s_align_prior}) {
+		const {
+			s_pre,
+		} = this.indents(s_before, s_align_prior, true);
+
 		return {
 			lint: [
 				'(function*() {\n',
@@ -290,6 +351,7 @@ const h_codify = {
 			],
 			meta: /* syntax: js */ `
 				__JMACS_OUTPUT.push(
+					${JSON.stringify(s_pre)},
 					...(
 						[...(function*() {
 							${g_expr.code}
@@ -315,13 +377,31 @@ class evaluator {
 		Object.assign(this, {
 			state: g_state,
 			context: vm.createContext({}),
+			_s_indent: '\t',
 		});
+	}
+
+	indents(s_before, s_align_prior, b_preserve_pre=false) {
+		s_align_prior = s_align_prior || '';
+		let s_align_future = s_align_prior;
+		if(s_before && '\n' === s_before[0]) {
+			s_align_future += /([ \t]*)$/.exec(s_before)[1];
+			if(!b_preserve_pre) s_before = '\n';
+		}
+
+		return {
+			s_pre: s_before+s_align_prior,
+			// s_align_this: s_align_prior+s_align_future,
+			s_align_future: s_align_future,
+			s_strip: s_align_future+this._s_indent,
+		};
 	}
 
 	codify(z_syntax, g_extras={}) {
 		if(Array.isArray(z_syntax)) {
 			let a_codified = [];
 			let g_prev = null;
+			let g_save = null;
 
 			let b_nws = false;
 			for(let g_node of z_syntax) {
@@ -330,13 +410,13 @@ class evaluator {
 					a_codified.push(this.codify(g_node, g_extras));
 				}
 				else if('whitespace' === g_node.type) {
-					g_prev = g_node;
+					g_save = g_node;
 				}
 				else {
 					// include previous whitespace after newline
-					if(g_prev) {
-						a_codified.push(this.codify(Object.assign(g_prev, {
-							text: g_prev.text.replace(/^[^]*?([^\n]*)$/, '$1'),
+					if(g_save) {
+						a_codified.push(this.codify(Object.assign(g_save, {
+							text: g_save.text,
 						}), g_extras));
 					}
 
@@ -346,6 +426,8 @@ class evaluator {
 					//
 					b_nws = true;
 				}
+
+				g_prev = g_node;
 			}
 
 			let a_lint = [];
@@ -485,11 +567,11 @@ module.exports = (a_sections) => {
 
 				is_output: '**IS_JMACS_OUTPUT**',
 
-				stringify(z_code, s_src=null) {
+				stringify(z_code, g_loc=null) {
 					switch(typeof z_code) {
 						case 'undefined': {
 							debugger;
-							throw new Error(\`refusing to serialize undefined\${'string' === typeof s_src? ' at : """\\n'+s_src+'\\n"""': ''}\`);
+							throw new Error(\`refusing to serialize undefined\${g_loc? \` @\${g_loc.first_line}:\${g_loc.first_column} - \${g_loc.last_line}\${g_loc.last_column}\`: ''}\`);
 						}
 
 						case 'string': return \`'\${z_code}'\`;
@@ -563,6 +645,12 @@ module.exports = (a_sections) => {
 					// 	breakLength: Infinity,
 
 					// });
+				},
+
+				indent(z_code, s_indent) {
+					if(!s_indent) return z_code;
+
+					return (z_code+'').split(/\\n/g).map((s, i) => (i? s_indent: '')+s).join('\\n');
 				},
 
 				srcmap: (z_code, g_loc, s_name=null) => {

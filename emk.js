@@ -70,7 +70,7 @@ module.exports = {
 						deps: ['src/language/*.{jison,jisonlex}'],
 						run: /* syntax: bash */ `
 							# compile grammar and lex; output to build dir
-							jison $1 $2 -o $@
+							npx jison $1 $2 -o $@
 						`,
 					}),
 				},

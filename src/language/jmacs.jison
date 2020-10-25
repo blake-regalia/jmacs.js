@@ -4,6 +4,8 @@
 
 	// copy abstract syntax tree constructors onto global scope object
 	Object.assign(global, ast);
+
+	const indent = s => /^(\s*)\S/.exec(s)[1];
 %}
 
 
@@ -41,15 +43,15 @@ body_section
 	;
 
 import
-	: '@import' js -> {type:'import', target:$js}
+	: '@import' js INDENT -> {type:'import', target:$js}
 	;
 
 if
-	: '@if' js body_section* elseif* else? '@end' -> {type:'if', if:$js, then:$3, elseifs:$4, else:$5}
+	: '@if' js INDENT body_section* elseif* else? '@end' -> {type:'if', if:$js, then:$4, elseifs:$5, else:$6, before:indent($1), indent:$INDENT}
 	;
 
 elseif
-	: '@else-if' js body_section* -> {type:'else-if', if:$js, then:$3}
+	: '@else-if' js INDENT body_section* -> {type:'else-if', if:$js, then:$4, indent:$INDENT}
 	;
 
 else
@@ -57,11 +59,11 @@ else
 	;
 
 global
-	: '@global' js -> {type:'global', def:$js}
+	: '@global' js INDENT -> {type:'global', def:$js}
 	;
 
 inline
-	: '@{' js '}' -> {type:'inline', expr:$js}
+	: '@{' js '}' -> {type:'inline', expr:$js, before:indent($1)}
 	;
 
 suppressed
@@ -73,15 +75,15 @@ suppressed_line
 	;
 
 def
-	: '@def' js body_section* '@end' -> {type:'macro', head:$js, body:$3}
+	: '@def' js INDENT body_section* '@end' -> {type:'macro', head:$js, body:$4, indent:$INDENT, before:indent($1)}
 	;
 
 def_cram
-	: '@def-cram' js body_section* '@end' -> {type:'macro', head:$js, body:$3, cram:true}
+	: '@def-cram' js INDENT body_section* '@end' -> {type:'macro', head:$js, body:$4, cram:true}
 	;
 
 generator
-	: '@*{' js '}' -> {type:'generator', expr:$js}
+	: '@*{' js '}' -> {type:'generator', expr:$js, before:indent($1)}
 	;
 
 js
