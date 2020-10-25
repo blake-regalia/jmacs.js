@@ -71,6 +71,15 @@ function strip_indent(a_parts, s_indent_offset) {
 }
 
 const h_codify = {
+	indent({token:s_token}) {
+		this._s_indent = JSON.parse(s_token.replace(/\t/g, '\\t'));
+
+		return {
+			lint: [],
+			meta: '',
+		};
+	},
+
 	import({target:g_target}, g_extras) {
 		let s_file = eval(g_target.code);
 		let s_cwd = process.cwd();
@@ -225,8 +234,7 @@ const h_codify = {
 			s_pre,
 			s_align_future,
 			s_strip,
-		} = this.indents(g.before, g_extras.align, false);
-
+		} = this.indents(g.before, g_extras.align, true);
 
 		g_extras = {
 			...g_extras,
@@ -382,15 +390,15 @@ class evaluator {
 	}
 
 	indents(s_before, s_align_prior, b_preserve_pre=false) {
-		s_align_prior = s_align_prior || '';
-		let s_align_future = s_align_prior;
+		const s_aligned = s_align_prior || '';
+		let s_align_future = s_aligned;
 		if(s_before && '\n' === s_before[0]) {
 			s_align_future += /([ \t]*)$/.exec(s_before)[1];
 			if(!b_preserve_pre) s_before = '\n';
 		}
 
 		return {
-			s_pre: s_before+s_align_prior,
+			s_pre: 'string' === typeof s_align_prior? (s_before+s_aligned).replace(s_align_prior, ''): s_before+s_aligned,
 			// s_align_this: s_align_prior+s_align_future,
 			s_align_future: s_align_future,
 			s_strip: s_align_future+this._s_indent,

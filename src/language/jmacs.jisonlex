@@ -77,9 +77,9 @@ regular_expression 		[/](?:[^/[\\]|\\.|\[(?:[^\]\\]|\\.)*])+\/
 (?:\r?\n[ \t]*)?"@^"[ \t]*				this.begin('jm_line'); return '@import';
 (?:\r?\n[ \t]*)?"@import"[ \t]*		this.begin('jm_line'); return '@import';
 (?:\r?\n[ \t]*)?"@#"						this.begin('jm_indent'); return '@indent';
-(?:\r?\n[ \t]*)?"@indent"				this.begin('jm_indent'); return '@indent';
+(?:\r?\n[ \t]*)?"@indent"[:]?[ \t]*	this.begin('jm_indent'); return '@indent';
 
-<jm_indent>[-+]+(['][^']*[']|["][^"]*["])?[ \t]?	this.popState(); return 'jm_indent_quantifier';
+<jm_indent>["]([ \t\\t]*)["][ \t]*\n	this.popState(); return 'INDENT_TOKEN';
 
 
 [ \t]+([\r\n])* 		return 'VERBATIM'

@@ -28,6 +28,7 @@ section
 	: body_section
 	| def
 	| def_cram
+	| '@indent' INDENT_TOKEN -> {type:'indent', token:$INDENT_TOKEN}
 	;
 
 body_section
