@@ -60,14 +60,16 @@ if(module === require.main) {
 		process.stdout.write(g_result.meta.standalone);
 	}
 	else {
-		let g_output;
-		try {
-			g_output = g_result.run();
-		}
-		catch(e_run) {
-			throw new Error(`execution error in meta-script:\n${e_run.message}\n${e_run.stack}`);
-		}
+		(async() => {
+			let g_output;
+			try {
+				g_output = await g_result.run();
+			}
+			catch(e_run) {
+				throw new Error(`execution error in meta-script:\n${e_run.message}\n${e_run.stack}`);
+			}
 
-		process.stdout.write(g_output.code);
+			process.stdout.write(g_output.code);
+		})();
 	}
 }

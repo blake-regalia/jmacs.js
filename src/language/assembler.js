@@ -494,6 +494,7 @@ class evaluator {
 
 		let y_script = new vm.Script(s_script, {
 			filename: this.state.path,
+			importModuleDynamically: (si_specifier) => import(si_specifier),
 		});
 
 		let h_context = {};
@@ -763,16 +764,19 @@ module.exports = (a_sections) => {
 				},
 			};
 
-			${g_codified.meta}
+			return (async() => {
 
-			return (() => {
-				let ysn_output = (new __JMACS.sourcemap.SourceNode(null, null, null, __JMACS_OUTPUT))
-					.toStringWithSourceMap();
+				${g_codified.meta}
 
-				return {
-					code: ysn_output.code,
-					map: ysn_output.map.toString(),
-				};
+				return (() => {
+					let ysn_output = (new __JMACS.sourcemap.SourceNode(null, null, null, __JMACS_OUTPUT))
+						.toStringWithSourceMap();
+
+					return {
+						code: ysn_output.code,
+						map: ysn_output.map.toString(),
+					};
+				})();
 			})();
 		`);
 
@@ -791,10 +795,10 @@ module.exports = (a_sections) => {
 				consumer: () => new sourcemap.SourceMapConsumer(ysn_meta.toStringWithSourceMap().map.toString()),
 			},
 
-			run() {
+			async run() {
 				let z_result;
 				try {
-					z_result = k_evaluator.run(s_eval);
+					z_result = await k_evaluator.run(s_eval);
 				}
 				catch(e_run) {
 					throw new Error(`there is a syntax error in the meta-script:\n${e_run.message} \n${e_run.stack}`);
